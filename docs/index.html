@@ -28,7 +28,7 @@
   a:hover{text-decoration:underline}
   .wrap{max-width:920px; margin:0 auto; padding:0 24px}
   header.hero{padding:88px 0 40px; text-align:center}
-  .mark{width:104px;height:auto;margin:0 auto 22px;display:block}
+  .mark{font-size:66px;line-height:1;margin:0 auto 16px;display:block;text-align:center}
   h1{font-size:clamp(2.4rem,6vw,3.6rem); margin:.1em 0 .15em; letter-spacing:-.02em; font-weight:750}
   .tag{font-size:clamp(1.05rem,2.4vw,1.3rem); color:var(--ink); font-weight:600; margin:.2em 0}
   .subtag{color:var(--muted); font-style:italic; margin:.1em 0 0}
@@ -92,28 +92,7 @@
 <div class="wrap">
 
   <header class="hero">
-    <svg class="mark" viewBox="0 0 120 100" fill="none" role="img"
-         aria-label="Aira — a minimal elephant assembled from memory nodes, with one illuminated memory">
-      <!-- body: token block -->
-      <rect x="44" y="40" width="52" height="30" rx="13" fill="none" stroke="#C8C5BC" stroke-width="2.6"/>
-      <!-- legs: token blocks -->
-      <rect x="53" y="66" width="10" height="20" rx="3.5" fill="none" stroke="#C8C5BC" stroke-width="2.6"/>
-      <rect x="80" y="66" width="10" height="20" rx="3.5" fill="none" stroke="#C8C5BC" stroke-width="2.6"/>
-      <!-- tail -->
-      <path d="M96 48 q 8 4 5 14" fill="none" stroke="#C8C5BC" stroke-width="2.4" stroke-linecap="round"/>
-      <!-- head: clustered node -->
-      <circle cx="39" cy="49" r="18" fill="none" stroke="#C8C5BC" stroke-width="2.6"/>
-      <!-- ear: attention arc -->
-      <path d="M33 35 a 13 13 0 0 1 15 5" fill="none" stroke="#75A478" stroke-width="2.6" stroke-linecap="round"/>
-      <!-- trunk: retrieval path -->
-      <path d="M25 55 C 17 65, 18 77, 26 82 c 4 2.6, 8.2 1, 8.6 -3.6"
-            fill="none" stroke="#75A478" stroke-width="2.6" stroke-linecap="round"/>
-      <!-- tusk -->
-      <path d="M31 60 l -6 6" stroke="#C8C5BC" stroke-width="2.2" stroke-linecap="round"/>
-      <!-- illuminated memory node: the one that is kept -->
-      <circle cx="37" cy="47" r="6.2" fill="none" stroke="#A76E78" stroke-width="2.4" opacity=".4"/>
-      <circle cx="37" cy="47" r="3.1" fill="#A76E78"/>
-    </svg>
+    <span class="mark" role="img" aria-label="Elephant">🐘</span>
     <h1>Aira&nbsp;LM</h1>
     <p class="tag">Small model. Long memory. Gentle by design.</p>
     <p class="subtag">Remember what matters. Forget responsibly.</p>
