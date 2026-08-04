@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aira-lm"
+version = "0.0.1"
+description = "Aira LM — a local-first, memory-native small language model. Small model. Long memory. Gentle by design."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "Dheeraj Pranav" }]
+keywords = ["language-model", "memory", "local-first", "pytorch", "privacy"]
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Development Status :: 2 - Pre-Alpha",
+  "Private :: Do Not Upload",
+]
+
+# Runtime uses ONLY the Python standard library at this stage:
+#   tomllib  — parse configs/aira_tiny.toml (stdlib since 3.11)
+#   argparse — CLI (no orchestration framework, per project constraints)
+#   random, os, platform, dataclasses, importlib — utilities
+# PyTorch is deferred to Step 11 (Aira Core) and installed via the `core` extra.
+# Device selection imports torch lazily, so the foundation stays installable and
+# fast on an 8 GB machine without a large download.
+dependencies = []
+
+[project.optional-dependencies]
+# Deferred to Step 11. Not required for Steps 01–10 (memory runtime + benchmark).
+core = ["torch>=2.2"]
+
+[project.scripts]
+aira = "aira.cli.main:main"
+
+[project.urls]
+Homepage = "https://dheerajpranav.github.io/aira-lm/"
+Repository = "https://github.com/DheerajPranav/aira-lm"
+
+# uv dev dependency group (PEP 735); installed by `uv sync` by default.
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aira"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+  "network: test is explicitly allowed to use the network (blocked by default)",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+warn_unused_configs = true
+
+# Optional dependencies (installed only via the `core` extra at Step 11). Their
+# absence must not fail type-checking of the dependency-light foundation.
+[[tool.mypy.overrides]]
+module = ["torch.*", "numpy.*"]
+ignore_missing_imports = true

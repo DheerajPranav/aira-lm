@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-00_control_tower-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-01_repository_foundation-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -30,11 +30,14 @@ when asked.
 
 ## Where this project is right now
 
-**This repository is at Stage 00 of 15.** The control plane — the plan, the
-invariants, the threat model, the evaluation gates — is in place. **No runtime code
-has been written yet.** Nothing here claims to be trained, fast, fluent, or
-production-ready. Every capability below is a *design commitment* that becomes real
-only when a repeatable test or benchmark proves it.
+**This repository is at Stage 01 of 15.** The control plane (plan, invariants, threat
+model, evaluation gates) and now the **project foundation** are in place: a Python
+3.12 package, configuration loading and validation, determinism and device utilities,
+and an `aira` CLI (`--version`, `--help`, `doctor`) — all under passing test, lint and
+type-check gates. **No memory or model behaviour is implemented yet**, and no model,
+tokenizer or checkpoint exists. Nothing here claims to be trained, fast, fluent, or
+production-ready. Every memory/model capability below is a *design commitment* that
+becomes real only when a repeatable test or benchmark proves it.
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
 performance property is claimed without a test that demonstrates it.*
@@ -126,7 +129,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 |---|---|
 | Architecture, invariants, threat model, evaluation plan | Documented |
 | Stage 00 control plane (plan, risks, ADRs, gate) | Complete |
-| Memory runtime (Stages 01–10) | Not started |
+| Stage 01 foundation (package, config, CLI, gates) | Complete |
+| Memory runtime (Stages 02–10) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

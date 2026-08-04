@@ -2,17 +2,17 @@
 
 ## Current stage
 
-- Stage: 00 — Control Tower
-- Status: Complete (control plane only; no runtime code)
-- Last verified commit: initial public commit of `aira-lm` (2026-08-04)
-- Last updated: 2026-08-04 by Claude Code
+- Stage: 01 — Repository Foundation
+- Status: Complete (foundation only; no memory or model behaviour)
+- Last verified commit: Step 01 commit of `aira-lm` (2026-08-05)
+- Last updated: 2026-08-05 by Claude Code
 
 ## Stage checklist
 
 | Step | Name | Status | Evidence |
 |---:|---|---|---|
 | 00 | Control tower and audit | Complete | `PROJECT_PLAN.md`, `ASSUMPTIONS.md`, `RISKS.md`, ADR-001..008, `scripts/verify_step00.sh` → PASS |
-| 01 | Repository foundation | Pending | |
+| 01 | Repository foundation | Complete | `pyproject.toml`, `src/aira/{config,seed,device,cli}`, 42 tests; pytest/ruff/mypy all green; `aira doctor` OK |
 | 02 | Schema and lifecycle | Pending | |
 | 03 | Aira Guard | Pending | |
 | 04 | Aira Vault and Trail | Pending | |
@@ -56,14 +56,45 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 01 — `./scripts/start_step.sh 01`.
 
+## Step 01 record — 2026-08-05
+
+- **Files created:** `pyproject.toml`, `uv.lock`, `.python-version`,
+  `src/aira/__init__.py`, `src/aira/config.py`, `src/aira/seed.py`,
+  `src/aira/device.py`, `src/aira/cli/{__init__,main}.py`,
+  `src/aira/{core,memory,chat,evaluation}/__init__.py`, `tests/conftest.py`,
+  `tests/test_{imports,config,device,seed,cli,no_network}.py`, `MODEL_CARD.md`,
+  `CONTRIBUTING.md`.
+- **Files modified:** `docs/BUILD_STATUS.md`, `README.md` (status bump); removed
+  `src/aira/.gitkeep`, `tests/.gitkeep`.
+- **Commands executed:** `uv python pin 3.12`; `uv sync`; `uv run pytest`;
+  `uv run ruff check .`; `uv run ruff format --check .`; `uv run mypy src`;
+  `uv run aira --version/--help/doctor`.
+- **Test/verification results:**
+  - `uv sync` → CPython **3.12.13** venv, 13 packages (pytest 9.1.1, ruff 0.16.1, mypy 2.3.0).
+  - `pytest` → **42 passed** in ~0.1s.
+  - `ruff check .` → **All checks passed**.
+  - `ruff format --check .` → **62 files already formatted**.
+  - `mypy src` (strict) → **no issues in 10 source files**.
+  - `aira doctor` → Python 3.12.13 (target), device `cpu`, config OK.
+- **Measured metrics:** 42 tests; 0 third-party runtime deps; 3 dev deps; interpreter
+  pinned to 3.12.13 (RISKS R1 resolved in-venv); torch deferred (not installed).
+- **ADR changes:** none required (foundation follows ADR-001/002/004/007; PyTorch
+  deferral documented in `pyproject.toml` and `MODEL_CARD.md`).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 02 — `./scripts/start_step.sh 02`.
+
 ## Known limitations
 
-- No runtime implementation exists yet; all security properties are design intent,
-  not verified behaviour. Zero-tolerance metrics become measurable only at Step 10.
+- Only the project foundation exists: config, determinism, device selection and a CLI
+  skeleton. No memory or model behaviour is implemented.
+- `MODEL_CARD.md` explicitly states no model/tokenizer/checkpoint exists yet.
+- All security properties remain design intent; zero-tolerance metrics become
+  measurable only at Step 10.
 - Production readiness has not been established.
 - License has not been selected; absent a `LICENSE`, the work is all-rights-reserved.
-- Required docs `MODEL_CARD.md` (Step 01) and `SECURITY.md`/`PRIVACY.md` (Step 14)
-  are not yet created.
+- `SECURITY.md` / `PRIVACY.md` are scheduled for Step 14.
+- PyTorch is not installed by default (deferred to Step 11 via the `core` extra), so
+  `aira doctor` reports device `cpu` until then.
 - The source architecture is a design reference, not independently validated
   production evidence.
 
