@@ -1,0 +1,49 @@
+[project]
+name = "aira-lm"
+tagline = "Small model. Long memory. Gentle by design."
+
+[model]
+vocab_size = 256
+context_length = 512
+embedding_dim = 256
+layers = 8
+heads = 8
+ffn_multiplier = 4
+dropout = 0.1
+tie_embeddings = true
+
+[generation]
+max_new_tokens = 128
+temperature = 0.8
+top_k = 40
+
+[memory]
+default_owner_id = "local-user"
+max_record_bytes = 8192
+context_token_budget = 256
+top_k = 5
+
+[retrieval]
+backend = "auto"
+lexical_weight = 0.40
+importance_weight = 0.15
+confidence_weight = 0.15
+recency_weight = 0.10
+reinforcement_weight = 0.05
+project_weight = 0.10
+kind_weight = 0.05
+decay_penalty_weight = 0.10
+
+[decay]
+enabled = true
+archive_threshold = 0.10
+episodic_half_life_days = 30
+semantic_half_life_days = 365
+preference_half_life_days = 365
+instruction_half_life_days = 730
+
+[runtime]
+seed = 42
+database_path = "runtime/aira.db"
+offline = true
+debug = false

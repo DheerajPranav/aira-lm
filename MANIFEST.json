@@ -1,0 +1,206 @@
+[
+  {
+    "path": ".gitignore",
+    "size": 197
+  },
+  {
+    "path": "CLAUDE.md",
+    "size": 3186
+  },
+  {
+    "path": "MASTER_BUILD_PROMPT.md",
+    "size": 1056
+  },
+  {
+    "path": "Makefile",
+    "size": 334
+  },
+  {
+    "path": "PROJECT_STATE_TEMPLATE.md",
+    "size": 181
+  },
+  {
+    "path": "README_FIRST.md",
+    "size": 4110
+  },
+  {
+    "path": "adr/001-separate-core-memory.md",
+    "size": 746
+  },
+  {
+    "path": "adr/002-sqlite-first.md",
+    "size": 718
+  },
+  {
+    "path": "adr/003-keyword-before-vector.md",
+    "size": 719
+  },
+  {
+    "path": "adr/004-deterministic-policy-first.md",
+    "size": 711
+  },
+  {
+    "path": "adr/005-delete-audit-no-content.md",
+    "size": 695
+  },
+  {
+    "path": "adr/006-graceful-memory-degradation.md",
+    "size": 669
+  },
+  {
+    "path": "adr/007-owner-isolation-v1.md",
+    "size": 673
+  },
+  {
+    "path": "benchmarks/.gitkeep",
+    "size": 0
+  },
+  {
+    "path": "configs/aira_tiny.toml",
+    "size": 871
+  },
+  {
+    "path": "docs/ARCHITECTURE.md",
+    "size": 2884
+  },
+  {
+    "path": "docs/BRANDING.md",
+    "size": 1230
+  },
+  {
+    "path": "docs/BUILD_STATUS.md",
+    "size": 1281
+  },
+  {
+    "path": "docs/DATA_CLASSIFICATION.md",
+    "size": 1193
+  },
+  {
+    "path": "docs/EVALUATION_PLAN.md",
+    "size": 1901
+  },
+  {
+    "path": "docs/FAILURE_MODES.md",
+    "size": 1469
+  },
+  {
+    "path": "docs/INVARIANTS.md",
+    "size": 1524
+  },
+  {
+    "path": "docs/MISSION.md",
+    "size": 1446
+  },
+  {
+    "path": "docs/REQUIREMENTS.md",
+    "size": 2640
+  },
+  {
+    "path": "docs/ROADMAP.md",
+    "size": 1077
+  },
+  {
+    "path": "docs/SOURCE_REVIEW.md",
+    "size": 1572
+  },
+  {
+    "path": "docs/THREAT_MODEL.md",
+    "size": 3051
+  },
+  {
+    "path": "prompts/00_CONTROL_TOWER.md",
+    "size": 1989
+  },
+  {
+    "path": "prompts/01_REPOSITORY_FOUNDATION.md",
+    "size": 2001
+  },
+  {
+    "path": "prompts/02_MEMORY_SCHEMA_LIFECYCLE.md",
+    "size": 1950
+  },
+  {
+    "path": "prompts/03_AIRA_GUARD.md",
+    "size": 1964
+  },
+  {
+    "path": "prompts/04_AIRA_VAULT_AND_TRAIL.md",
+    "size": 2105
+  },
+  {
+    "path": "prompts/05_CAPTURE_AND_EVALUATION.md",
+    "size": 1981
+  },
+  {
+    "path": "prompts/06_AIRA_RECALL.md",
+    "size": 1923
+  },
+  {
+    "path": "prompts/07_RANKING_AND_CONTEXT.md",
+    "size": 1986
+  },
+  {
+    "path": "prompts/08_CHAT_INTEGRATION.md",
+    "size": 1897
+  },
+  {
+    "path": "prompts/09_AIRA_FADE_AND_GOVERNANCE.md",
+    "size": 1977
+  },
+  {
+    "path": "prompts/10_AIRA_BENCH.md",
+    "size": 1890
+  },
+  {
+    "path": "prompts/11_AIRA_CORE.md",
+    "size": 1842
+  },
+  {
+    "path": "prompts/12_TRAINING_AND_GENERATION.md",
+    "size": 1822
+  },
+  {
+    "path": "prompts/13_MEMORY_CONDITIONED_EVALUATION.md",
+    "size": 1822
+  },
+  {
+    "path": "prompts/14_RELEASE_HARDENING.md",
+    "size": 2034
+  },
+  {
+    "path": "references/memory-system.html",
+    "size": 148309
+  },
+  {
+    "path": "runtime/.gitkeep",
+    "size": 0
+  },
+  {
+    "path": "scripts/check_environment.sh",
+    "size": 771
+  },
+  {
+    "path": "scripts/list_steps.sh",
+    "size": 211
+  },
+  {
+    "path": "scripts/show_next_step.sh",
+    "size": 202
+  },
+  {
+    "path": "scripts/start_step.sh",
+    "size": 694
+  },
+  {
+    "path": "scripts/verify.sh",
+    "size": 234
+  },
+  {
+    "path": "src/aira/.gitkeep",
+    "size": 0
+  },
+  {
+    "path": "tests/.gitkeep",
+    "size": 0
+  }
+]

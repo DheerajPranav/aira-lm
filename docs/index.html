@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aira LM — Small model. Long memory. Gentle by design.</title>
+<meta name="description" content="A local-first, memory-native small language model. A research project on secure, selective, explainable remembering — and responsible forgetting.">
+<style>
+  :root{
+    --slate:#111318; --stone:#C8C5BC; --green:#75A478; --rose:#A76E78;
+    --bg:#f7f6f3; --surface:#ffffff; --ink:#111318; --muted:#5b5f68;
+    --line:#e4e1da; --accent:var(--green); --rosea:var(--rose);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d0f13; --surface:#15181e; --ink:#f2f1ec;
+      --muted:#a3a7b0; --line:#242832; --accent:#86b489; --rosea:#c08893;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:920px; margin:0 auto; padding:0 24px}
+  header.hero{padding:88px 0 40px; text-align:center}
+  .mark{width:76px;height:76px;margin:0 auto 26px;display:block}
+  h1{font-size:clamp(2.4rem,6vw,3.6rem); margin:.1em 0 .15em; letter-spacing:-.02em; font-weight:750}
+  .tag{font-size:clamp(1.05rem,2.4vw,1.3rem); color:var(--ink); font-weight:600; margin:.2em 0}
+  .subtag{color:var(--muted); font-style:italic; margin:.1em 0 0}
+  .epigraph{
+    max-width:640px;margin:34px auto 0;padding:18px 24px;
+    border-left:3px solid var(--rosea); text-align:left; color:var(--muted);
+    font-style:italic; background:var(--surface); border-radius:0 10px 10px 0;
+  }
+  .badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:30px 0 6px}
+  .badge{font-size:.78rem;font-weight:600;letter-spacing:.02em;padding:5px 11px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+  .badge.stage{color:#fff;background:var(--slate);border-color:var(--slate)}
+  .badge.dev{color:#12331c;background:var(--green);border-color:var(--green)}
+  @media (prefers-color-scheme: dark){.badge.dev{color:#08130c}}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:26px 0 0}
+  .btn{display:inline-block;padding:11px 20px;border-radius:10px;font-weight:650;font-size:.95rem;border:1px solid var(--line)}
+  .btn.primary{background:var(--slate);color:#fff;border-color:var(--slate)}
+  .btn.primary:hover{text-decoration:none;opacity:.92}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.ghost:hover{text-decoration:none;border-color:var(--accent)}
+  section{padding:44px 0;border-top:1px solid var(--line)}
+  h2{font-size:1.6rem;letter-spacing:-.01em;margin:0 0 .2em}
+  .lead{color:var(--muted);margin:.2em 0 1.4em;max-width:660px}
+  .q{font-size:1.35rem;line-height:1.5;font-weight:650;max-width:720px}
+  .q em{color:var(--accent);font-style:normal}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .card h3{margin:.1em 0 .35em;font-size:1.1rem}
+  .card p{margin:0;color:var(--muted);font-size:.94rem}
+  .parts{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-top:6px}
+  .part{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 15px;font-size:.92rem}
+  .part b{color:var(--ink)} .part span{color:var(--muted)}
+  ol.inv{margin:0;padding-left:1.2em;columns:2;column-gap:34px}
+  ol.inv li{margin:0 0 8px;break-inside:avoid;color:var(--muted)}
+  ol.inv li b{color:var(--ink)}
+  .zt{margin-top:16px;padding:14px 18px;border-radius:12px;border:1px solid var(--rosea);
+    background:var(--surface);font-size:.92rem}
+  .zt b{color:var(--rosea)}
+  table.status{width:100%;border-collapse:collapse;font-size:.93rem;margin-top:6px}
+  table.status td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.status td:first-child{color:var(--ink);font-weight:600;width:52%}
+  table.status td:last-child{color:var(--muted)}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:4px}
+  .pill.done{background:var(--green);color:#0a1b0f}
+  .pill.soon{background:var(--stone);color:#2a2a2a}
+  .pill.none{background:transparent;color:var(--rosea);border:1px solid var(--rosea)}
+  @media (prefers-color-scheme: dark){.pill.done{color:#05100a}}
+  .roadmap{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:6px}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:.86rem;color:var(--muted)}
+  .step b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .step.active{border-color:var(--green)}
+  .note{font-size:.86rem;color:var(--muted);margin-top:14px}
+  footer{padding:48px 0 60px;text-align:center;color:var(--muted);border-top:1px solid var(--line)}
+  footer .closing{font-style:italic;color:var(--ink)}
+  .disclaim{max-width:680px;margin:10px auto 0;font-size:.86rem}
+  @media (max-width:560px){ol.inv{columns:1} header.hero{padding:64px 0 30px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <svg class="mark" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <!-- abstract memory: nodes and paths, one illuminated -->
+      <line x1="30" y1="34" x2="52" y2="26" stroke="#75A478" stroke-width="2" opacity=".5"/>
+      <line x1="52" y1="26" x2="72" y2="40" stroke="#75A478" stroke-width="2" opacity=".5"/>
+      <line x1="30" y1="34" x2="40" y2="60" stroke="#75A478" stroke-width="2" opacity=".5"/>
+      <line x1="40" y1="60" x2="64" y2="66" stroke="#75A478" stroke-width="2" opacity=".5"/>
+      <line x1="72" y1="40" x2="64" y2="66" stroke="#75A478" stroke-width="2" opacity=".5"/>
+      <line x1="52" y1="26" x2="40" y2="60" stroke="#75A478" stroke-width="2" opacity=".28"/>
+      <circle cx="30" cy="34" r="6.5" fill="#C8C5BC"/>
+      <circle cx="72" cy="40" r="6.5" fill="#C8C5BC"/>
+      <circle cx="40" cy="60" r="6.5" fill="#C8C5BC"/>
+      <circle cx="64" cy="66" r="6.5" fill="#C8C5BC"/>
+      <circle cx="52" cy="26" r="8.5" fill="#A76E78"/>
+      <circle cx="52" cy="26" r="8.5" fill="none" stroke="#A76E78" stroke-width="3" opacity=".35"/>
+    </svg>
+    <h1>Aira&nbsp;LM</h1>
+    <p class="tag">Small model. Long memory. Gentle by design.</p>
+    <p class="subtag">Remember what matters. Forget responsibly.</p>
+
+    <blockquote class="epigraph">
+      Some things are worth keeping for a long time. The rest deserves to be let go
+      of gently. Aira is an attempt to teach a small machine that difference — to
+      hold what matters without carrying everything forever.
+    </blockquote>
+
+    <div class="badges">
+      <span class="badge stage">Stage 00 · Control Tower</span>
+      <span class="badge dev">In active development</span>
+      <span class="badge">Local-first · offline</span>
+      <span class="badge">Python 3.12</span>
+      <span class="badge">License: not yet chosen</span>
+    </div>
+
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/DheerajPranav/aira-lm">View on GitHub</a>
+      <a class="btn ghost" href="#plan">Read the plan</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>The question</h2>
+    <p class="q">Can a compact language model stay consistent over a long horizon
+      through <em>secure, selective, explainable remembering</em> — and
+      <em>responsible forgetting</em>?</p>
+    <p class="lead" style="margin-top:1.2em">Not by growing larger. By remembering
+      well: keeping the few things that matter, proving where each memory came from,
+      refusing secrets, and forgetting completely when asked.</p>
+  </section>
+
+  <section>
+    <h2>Two systems, kept apart</h2>
+    <p class="lead">Aira is built as two independent halves, so the memory runtime
+      can be fully tested before any model is trained.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Aira Core</h3>
+        <p>A compact decoder-only transformer written directly in PyTorch — roughly
+          5–10M parameters, small enough for an M2 with 8&nbsp;GB, CPU-only supported.</p>
+      </div>
+      <div class="card">
+        <h3>Aira Memory</h3>
+        <p>A model-independent runtime for capturing, storing, retrieving,
+          correcting, forgetting, auditing and evaluating memories — tested against a
+          deterministic mock backend, never a trained checkpoint.</p>
+      </div>
+    </div>
+    <div class="parts">
+      <div class="part"><b>Aira Guard</b> · <span>blocks secrets before storage</span></div>
+      <div class="part"><b>Aira Vault</b> · <span>owner-scoped transactional storage</span></div>
+      <div class="part"><b>Aira Trail</b> · <span>provenance &amp; append-only audit</span></div>
+      <div class="part"><b>Aira Recall</b> · <span>owner-scoped keyword retrieval</span></div>
+      <div class="part"><b>Aira Fade</b> · <span>decay, expiry &amp; archival</span></div>
+      <div class="part"><b>Aira Bench</b> · <span>golden &amp; adversarial evaluation</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What Aira promises to prove</h2>
+    <p class="lead">Twelve hard invariants organize the build. Each maps to at least
+      one deterministic, offline test.</p>
+    <ol class="inv">
+      <li><b>Owner isolation</b> — one person's memory is never returned to another.</li>
+      <li><b>Deletion integrity</b> — forgotten memories never resurface.</li>
+      <li><b>Graceful degradation</b> — if memory fails, the model still answers.</li>
+      <li><b>Provenance</b> — every memory records how it was learned.</li>
+      <li><b>Selective admission</b> — nothing is stored without passing the gate.</li>
+      <li><b>No fact promotion</b> — the model's words don't become your facts.</li>
+      <li><b>Secret non-persistence</b> — credentials never enter memory.</li>
+      <li><b>Untrusted retrieval</b> — memory is quoted data, never an instruction.</li>
+      <li><b>User control</b> — your correction and forgetting always win.</li>
+      <li><b>Bounded context</b> — memory never exceeds its token budget.</li>
+      <li><b>Transactional lifecycle</b> — state and audit commit or roll back together.</li>
+      <li><b>Measured claims</b> — nothing asserted without a repeatable test.</li>
+    </ol>
+    <div class="zt"><b>Four are zero-tolerance.</b> Cross-owner leakage,
+      forgotten-memory leakage, secret persistence and context-budget violations must
+      each read exactly <b>0</b> in the benchmark suite.</div>
+  </section>
+
+  <section id="plan">
+    <h2>Built one honest stage at a time</h2>
+    <p class="lead">A stage is finished only when its measurable gate passes and the
+      evidence is recorded. This is where it stands today.</p>
+    <div class="roadmap">
+      <div class="step active"><b>00</b> Control tower ✓</div>
+      <div class="step"><b>01</b> Repository foundation</div>
+      <div class="step"><b>02</b> Schema &amp; lifecycle</div>
+      <div class="step"><b>03</b> Aira Guard</div>
+      <div class="step"><b>04</b> Vault &amp; Trail</div>
+      <div class="step"><b>05</b> Capture &amp; evaluation</div>
+      <div class="step"><b>06</b> Aira Recall</div>
+      <div class="step"><b>07</b> Ranking &amp; context</div>
+      <div class="step"><b>08</b> Chat integration</div>
+      <div class="step"><b>09</b> Fade &amp; governance</div>
+      <div class="step"><b>10</b> Aira Bench</div>
+      <div class="step"><b>11</b> Aira Core</div>
+      <div class="step"><b>12</b> Training &amp; generation</div>
+      <div class="step"><b>13</b> Memory-conditioned eval</div>
+      <div class="step"><b>14</b> Release hardening</div>
+    </div>
+    <p class="note">Full plan, dependencies and completion gates live in
+      <a href="https://github.com/DheerajPranav/aira-lm/blob/main/PROJECT_PLAN.md">PROJECT_PLAN.md</a>.</p>
+  </section>
+
+  <section>
+    <h2>Status, plainly</h2>
+    <table class="status">
+      <tr><td>Architecture, invariants, threat model, evaluation plan</td><td><span class="pill done">DONE</span>Documented</td></tr>
+      <tr><td>Stage 00 control plane (plan, risks, ADRs, gate)</td><td><span class="pill done">DONE</span>Complete</td></tr>
+      <tr><td>Memory runtime (Stages 01–10)</td><td><span class="pill soon">SOON</span>Not started</td></tr>
+      <tr><td>Aira Core model (Stages 11–13)</td><td><span class="pill soon">SOON</span>Not started</td></tr>
+      <tr><td>Trained checkpoint / language quality</td><td><span class="pill none">NONE</span>Not claimed</td></tr>
+      <tr><td>License</td><td><span class="pill none">OPEN</span>Not chosen — all rights reserved for now</td></tr>
+      <tr><td>Hosted production</td><td><span class="pill none">N/A</span>Out of scope; a production-gap doc is planned</td></tr>
+    </table>
+    <p class="disclaim note">This is a research project in progress. No runtime code
+      exists yet; everything above the line is a design commitment that becomes real
+      only when a test proves it. Nothing here is production-ready, and no such claim
+      is made.</p>
+  </section>
+
+  <footer>
+    <p class="closing">Built quietly, one honest stage at a time.</p>
+    <p><a href="https://github.com/DheerajPranav/aira-lm">github.com/DheerajPranav/aira-lm</a></p>
+  </footer>
+
+</div>
+</body>
+</html>
