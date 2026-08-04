@@ -36,9 +36,12 @@ Default shape is defined in `configs/aira_tiny.toml` and validated by `aira.conf
 
 ## Training data
 
-None yet. When training is implemented (Step 12) it will use small, local text
-corpora that the user supplies or that ship as tiny sample fixtures. Data provenance
-and size will be recorded here.
+None yet. When training is implemented (Step 12) it will use a small, local,
+**synthetically generated** closed-domain corpus (plus an optional user-supplied
+public-domain scaffold). The corpus design — grammar, held-out entity slots for
+honest memory-conditioned evaluation, sizing and reproducibility — is specified in
+[`docs/DATA_STRATEGY.md`](docs/DATA_STRATEGY.md) and [`adr/009`](adr/009-synthetic-closed-domain-data.md).
+Data provenance, exact sizes and seeds will be recorded here once generated.
 
 ## Evaluation
 

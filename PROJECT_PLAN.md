@@ -122,9 +122,10 @@ aira-lm/
 │   │                                        classification, evaluation, failure
 │   │                                        modes, roadmap, branding, source review,
 │   │                                        build status, model card, adr index
+│   ├── DATA_STRATEGY.md            (01)  synthetic corpus design for Steps 11–13
 │   ├── index.html                  (00)  GitHub Pages landing page
 │   └── PRODUCTION_GAP.md            (14)
-├── adr/                            (exists) 001..007 + new records per stage
+├── adr/                            (exists) 001..009 + new records per stage
 ├── prompts/                        (exists) 00..14 stage prompts
 ├── references/
 │   └── memory-system.html          (exists) source study
