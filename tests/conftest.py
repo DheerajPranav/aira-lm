@@ -9,10 +9,19 @@ offline by design.
 from __future__ import annotations
 
 import socket
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+
+from aira.memory.domain import (
+    MemoryKind,
+    MemoryRecord,
+    Provenance,
+    ProvenanceSource,
+    make_memory,
+)
 
 
 class NetworkBlockedError(RuntimeError):
@@ -34,3 +43,50 @@ def _no_network(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setattr(socket.socket, "connect", _blocked)
     monkeypatch.setattr(socket.socket, "connect_ex", _blocked)
     yield
+
+
+# --- Domain test fixtures (fixed clock for determinism) ---------------------------
+
+FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def fixed_now() -> datetime:
+    """A fixed, timezone-aware UTC instant for deterministic timestamps."""
+    return FIXED_NOW
+
+
+@pytest.fixture
+def provenance() -> Provenance:
+    """An explicit-user provenance captured at the fixed instant."""
+    return Provenance(
+        source=ProvenanceSource.USER_EXPLICIT,
+        actor="owner-a",
+        method="explicit remember request",
+        captured_at=FIXED_NOW,
+    )
+
+
+@pytest.fixture
+def make_record(provenance: Provenance) -> Callable[..., MemoryRecord]:
+    """Return a factory that builds ACTIVE memory records with sensible defaults."""
+
+    def _factory(
+        *,
+        id: str = "mem-1",
+        owner_id: str = "owner-a",
+        content: str = "owner-a prefers dark mode",
+        kind: MemoryKind = MemoryKind.PREFERENCE,
+        **kwargs: Any,
+    ) -> MemoryRecord:
+        return make_memory(
+            id=id,
+            owner_id=owner_id,
+            content=content,
+            kind=kind,
+            provenance=provenance,
+            now=FIXED_NOW,
+            **kwargs,
+        )
+
+    return _factory

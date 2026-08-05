@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 01 — Repository Foundation
-- Status: Complete (foundation only; no memory or model behaviour)
-- Last verified commit: Step 01 commit of `aira-lm` (2026-08-05)
-- Last updated: 2026-08-05 by Claude Code
+- Stage: 02 — Memory Schema Lifecycle
+- Status: Complete (pure domain; no persistence, no model)
+- Last verified commit: Step 02 commit of `aira-lm` (2026-08-06)
+- Last updated: 2026-08-06 by Claude Code
 
 ## Stage checklist
 
@@ -13,7 +13,7 @@
 |---:|---|---|---|
 | 00 | Control tower and audit | Complete | `PROJECT_PLAN.md`, `ASSUMPTIONS.md`, `RISKS.md`, ADR-001..008, `scripts/verify_step00.sh` → PASS |
 | 01 | Repository foundation | Complete | `pyproject.toml`, `src/aira/{config,seed,device,cli}`, 42 tests; pytest/ruff/mypy all green; `aira doctor` OK |
-| 02 | Schema and lifecycle | Pending | |
+| 02 | Schema and lifecycle | Complete | `src/aira/memory/domain/*` (enums, records, lifecycle, hashing, clock); 119 tests; pytest/ruff/mypy green; ADR-010 |
 | 03 | Aira Guard | Pending | |
 | 04 | Aira Vault and Trail | Pending | |
 | 05 | Capture and evaluation | Pending | |
@@ -83,10 +83,41 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 02 — `./scripts/start_step.sh 02`.
 
+## Step 02 record — 2026-08-06
+
+- **Files created:** `src/aira/memory/domain/{__init__,enums,errors,clock,hashing,records,lifecycle}.py`,
+  `tests/test_domain_{hashing,records,lifecycle}.py`,
+  `adr/010-tombstone-and-hash-integrity.md`.
+- **Files modified:** `src/aira/memory/__init__.py` (docstring), `tests/conftest.py`
+  (domain fixtures: `fixed_now`, `provenance`, `make_record`), `tests/test_imports.py`
+  (domain modules), `docs/BUILD_STATUS.md`.
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **119 passed** (77 new domain tests + 42 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **74 files formatted**.
+  - `mypy src` (strict) → **no issues in 17 source files**.
+- **What was built:** enums (action, kind, lifetime, status, sensitivity, consent,
+  retention, provenance source); frozen `Provenance`, `MemoryRecord` and a content-free
+  `Tombstone`; `make_memory` factory; deterministic normalization/hashing/canonical
+  keys; lifecycle state machine (create/update/supersede/archive/expire/forget/
+  hard-delete) with an allowed/forbidden transition table and human-readable reasons.
+- **Invariant coverage (tested):** deletion integrity via type-level content-free
+  tombstone (inv. 2/7); required owner + provenance (inv. 4); transition validity
+  (inv. 11); deterministic hashing + hash-integrity validation (inv. 12); every allowed
+  and every forbidden transition exercised.
+- **Measured metrics:** 119 tests; 0 runtime deps still (pure stdlib domain).
+- **ADR changes:** ADR-010 added (content-free tombstone type + content-hash integrity).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 03 — `./scripts/start_step.sh 03`.
+
 ## Known limitations
 
-- Only the project foundation exists: config, determinism, device selection and a CLI
-  skeleton. No memory or model behaviour is implemented.
+- The domain layer has no persistence, retrieval, capture, secret detection or model
+  code (all later steps). It can represent and validate the lifecycle, nothing more.
+- Only the project foundation + domain exist: config, determinism, device selection, a
+  CLI skeleton, and the typed memory domain. No memory *runtime* or model behaviour yet.
+- `MODEL_CARD.md` explicitly states no model/tokenizer/checkpoint exists yet.
 - `MODEL_CARD.md` explicitly states no model/tokenizer/checkpoint exists yet.
 - All security properties remain design intent; zero-tolerance metrics become
   measurable only at Step 10.

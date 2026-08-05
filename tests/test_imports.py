@@ -15,6 +15,13 @@ MODULES = [
     "aira.cli.main",
     "aira.core",
     "aira.memory",
+    "aira.memory.domain",
+    "aira.memory.domain.enums",
+    "aira.memory.domain.records",
+    "aira.memory.domain.lifecycle",
+    "aira.memory.domain.hashing",
+    "aira.memory.domain.clock",
+    "aira.memory.domain.errors",
     "aira.chat",
     "aira.evaluation",
 ]
