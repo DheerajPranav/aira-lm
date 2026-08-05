@@ -2,9 +2,9 @@
 
 ## Current stage
 
-- Stage: 02 — Memory Schema Lifecycle
-- Status: Complete (pure domain; no persistence, no model)
-- Last verified commit: Step 02 commit of `aira-lm` (2026-08-06)
+- Stage: 03 — Aira Guard
+- Status: Complete (pre-persistence gate; no storage, no LLM, no PII service)
+- Last verified commit: Step 03 commit of `aira-lm` (2026-08-06)
 - Last updated: 2026-08-06 by Claude Code
 
 ## Stage checklist
@@ -14,7 +14,7 @@
 | 00 | Control tower and audit | Complete | `PROJECT_PLAN.md`, `ASSUMPTIONS.md`, `RISKS.md`, ADR-001..008, `scripts/verify_step00.sh` → PASS |
 | 01 | Repository foundation | Complete | `pyproject.toml`, `src/aira/{config,seed,device,cli}`, 42 tests; pytest/ruff/mypy all green; `aira doctor` OK |
 | 02 | Schema and lifecycle | Complete | `src/aira/memory/domain/*` (enums, records, lifecycle, hashing, clock); 119 tests; pytest/ruff/mypy green; ADR-010 |
-| 03 | Aira Guard | Pending | |
+| 03 | Aira Guard | Complete | `src/aira/memory/guard/*` (interface, detectors, redaction, guard); 156 tests; pytest/ruff/mypy green; ADR-011 |
 | 04 | Aira Vault and Trail | Pending | |
 | 05 | Capture and evaluation | Pending | |
 | 06 | Aira Recall | Pending | |
@@ -111,10 +111,40 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 03 — `./scripts/start_step.sh 03`.
 
+## Step 03 record — 2026-08-06
+
+- **Files created:** `src/aira/memory/guard/{__init__,interface,detectors,redaction,guard}.py`,
+  `tests/test_guard.py`, `adr/011-guard-deterministic-span-only-detection.md`.
+- **Files modified:** `tests/test_imports.py` (guard modules), `docs/BUILD_STATUS.md`,
+  `README.md` (status bump).
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **156 passed** (37 new guard tests + 119 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **81 files formatted**.
+  - `mypy src` (strict) → **no issues in 22 source files**.
+- **What was built:** a replaceable `Guard` protocol and `DeterministicGuard`; span-only
+  detectors for private keys, API keys (AWS/GitHub/Google/Slack/Stripe/OpenAI +
+  keyword-anchored), bearer/JWT, password assignments, credential URLs, cookies, and
+  Luhn-checked payment cards; policy detectors for do-not-remember and
+  instruction/override language; redaction with token replacement; a conservative
+  sensitivity classifier; an input-size limit; and an audit-safe `GuardEvent`.
+- **Invariant coverage (tested):** no raw secret in preview, reason, `repr`, serialized
+  event, or logs (inv. 7); one test per secret category + secret-in-prose + multiline
+  private key; benign look-alikes not blocked; oversized input blocked without scanning;
+  do-not-remember / instruction-like flagged but not blocked (inv. 5, 8).
+- **Measured metrics:** 156 tests; secret-persistence scaffold reports **0** raw values
+  in any output; still **0** third-party runtime deps.
+- **ADR changes:** ADR-011 added (deterministic span-only detection, precision over recall).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 04 — `./scripts/start_step.sh 04`.
+
 ## Known limitations
 
-- The domain layer has no persistence, retrieval, capture, secret detection or model
-  code (all later steps). It can represent and validate the lifecycle, nothing more.
+- The guard detects a documented, non-exhaustive set of secret formats (precision over
+  recall by design, ADR-011); unusual formats may pass and are backstopped by capture.
+- No persistence, retrieval, capture or model code yet (later steps). The domain and
+  guard can validate and screen content but nothing is stored.
 - Only the project foundation + domain exist: config, determinism, device selection, a
   CLI skeleton, and the typed memory domain. No memory *runtime* or model behaviour yet.
 - `MODEL_CARD.md` explicitly states no model/tokenizer/checkpoint exists yet.

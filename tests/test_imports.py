@@ -22,6 +22,11 @@ MODULES = [
     "aira.memory.domain.hashing",
     "aira.memory.domain.clock",
     "aira.memory.domain.errors",
+    "aira.memory.guard",
+    "aira.memory.guard.interface",
+    "aira.memory.guard.detectors",
+    "aira.memory.guard.redaction",
+    "aira.memory.guard.guard",
     "aira.chat",
     "aira.evaluation",
 ]

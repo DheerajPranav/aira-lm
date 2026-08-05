@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-02_memory_schema_lifecycle-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-03_aira_guard-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -30,17 +30,20 @@ when asked.
 
 ## Where this project is right now
 
-**This repository is at Stage 02 of 15.** In place so far: the control plane (plan,
+**This repository is at Stage 03 of 15.** In place so far: the control plane (plan,
 invariants, threat model, evaluation gates); the **project foundation** (a Python 3.12
 package, config loading/validation, determinism and device utilities, and an `aira` CLI
-with `--version`, `--help`, `doctor`); and the **typed memory domain** — immutable,
-validated records with provenance, deterministic content hashing, and a lifecycle state
-machine (create / update / supersede / archive / expire / forget / hard-delete) whose
-hard-delete yields a content-free tombstone. All of it under passing test, lint and
-type-check gates (119 tests). **No persistence, retrieval or model behaviour is
-implemented yet**, and no model, tokenizer or checkpoint exists. Nothing here claims to
-be trained, fast, fluent, or production-ready. Every capability still ahead is a
-*design commitment* that becomes real only when a repeatable test or benchmark proves it.
+with `--version`, `--help`, `doctor`); the **typed memory domain** — immutable, validated
+records with provenance, deterministic content hashing, and a lifecycle state machine
+whose hard-delete yields a content-free tombstone; and **Aira Guard**, the
+pre-persistence privacy gate — deterministic, offline detection and redaction of secrets
+(keys, tokens, private keys, passwords, credential URLs, cookies, payment cards) that
+never emits a raw value, plus do-not-remember and instruction-override flagging. All of
+it under passing test, lint and type-check gates (156 tests). **No persistence, retrieval
+or model behaviour is implemented yet**, and no model, tokenizer or checkpoint exists.
+Nothing here claims to be trained, fast, fluent, or production-ready. Every capability
+still ahead is a *design commitment* that becomes real only when a repeatable test or
+benchmark proves it.
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
 performance property is claimed without a test that demonstrates it.*
@@ -134,7 +137,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 00 control plane (plan, risks, ADRs, gate) | Complete |
 | Stage 01 foundation (package, config, CLI, gates) | Complete |
 | Stage 02 memory domain (records, lifecycle, hashing) | Complete |
-| Memory runtime — guard/storage/retrieval (Stages 03–10) | Not started |
+| Stage 03 Aira Guard (secret detection + redaction) | Complete |
+| Memory runtime — storage/retrieval/chat (Stages 04–10) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |
