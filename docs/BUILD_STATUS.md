@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 04 — Aira Vault and Trail
-- Status: Complete (local persistence + audit; no retrieval, no chat, no model)
-- Last verified commit: Step 04 commit of `aira-lm` (2026-08-07)
-- Last updated: 2026-08-07 by Claude Code
+- Stage: 05 — Capture and Evaluation
+- Status: Complete (deterministic write path; no retrieval, no chat, no model)
+- Last verified commit: Step 05 commit of `aira-lm` (2026-08-08)
+- Last updated: 2026-08-08 by Claude Code
 
 ## Stage checklist
 
@@ -16,7 +16,7 @@
 | 02 | Schema and lifecycle | Complete | `src/aira/memory/domain/*` (enums, records, lifecycle, hashing, clock); 119 tests; pytest/ruff/mypy green; ADR-010 |
 | 03 | Aira Guard | Complete | `src/aira/memory/guard/*` (interface, detectors, redaction, guard); 156 tests; pytest/ruff/mypy green; ADR-011 |
 | 04 | Aira Vault and Trail | Complete | `src/aira/memory/{vault,trail}/*`; 180 tests; pytest/ruff/mypy green; ADR-012 |
-| 05 | Capture and evaluation | Pending | |
+| 05 | Capture and evaluation | Complete | `src/aira/memory/capture/*`; 200 tests; pytest/ruff/mypy green; ADR-013 |
 | 06 | Aira Recall | Pending | |
 | 07 | Ranking and context | Pending | |
 | 08 | Chat integration | Pending | |
@@ -171,10 +171,42 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 05 — `./scripts/start_step.sh 05`.
 
+## Step 05 record — 2026-08-08
+
+- **Files created:** `src/aira/memory/capture/{__init__,models,extraction,evaluation,service}.py`,
+  `tests/test_capture.py`, `adr/013-deterministic-capture-and-superseding.md`.
+- **Files modified:** `src/aira/memory/vault/repository.py`
+  (`find_active_by_canonical_key`), `tests/test_imports.py`, `docs/BUILD_STATUS.md`,
+  `README.md` (status bump).
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **200 passed** (15 new capture tests + 185 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **99 files formatted**.
+  - `mypy src` (strict) → **no issues in 36 source files**.
+- **What was built:** deterministic candidate extraction (explicit remember/forget,
+  `my <attr> is <value>`, identity, project, instruction, `I prefer <value>`) into
+  subject-based canonical keys; a utility evaluator with importance/confidence,
+  reasons, and temporary/low-value dropping; and a `CaptureService` that runs guard
+  first, refuses assistant promotion, honours do-not-remember, resolves canonical-key
+  collisions into supersede/duplicate/new, plans forget operations, and exposes a
+  policy trace. Plan-then-apply keeps extraction/evaluation pure.
+- **Invariant coverage (tested):** provenance on every memory (inv. 4); selective
+  admission incl. temporary drop (inv. 5); assistant statements not promoted (inv. 6);
+  instruction-override content not promoted (inv. 8); correction supersedes and forget
+  removes (inv. 9); explicit evidence stronger than inferred; duplicate ignored; unsafe
+  content blocked by guard before storage; deterministic (inv. 12).
+- **Measured metrics:** 200 tests; still **0** third-party runtime deps.
+- **ADR changes:** ADR-013 added (deterministic capture, canonical-key superseding).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 06 — `./scripts/start_step.sh 06`.
+
 ## Known limitations
 
-- No retrieval/search (Step 06), capture/evaluation (Step 05), chat or model code yet.
-  The vault stores and audits lifecycle state but does not decide what to store or rank.
+- Extraction is a documented, non-exhaustive regex heuristic set (ADR-013);
+  unrecognized phrasings are simply not stored rather than stored wrongly.
+- No retrieval/search (Step 06), chat (Step 08) or model code yet. Memories can be
+  written and superseded but not yet searched or composed into context.
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

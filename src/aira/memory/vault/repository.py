@@ -96,6 +96,20 @@ class MemoryRepository:
         rows = self._conn.execute(sql, params).fetchall()
         return [row_to_memory(r) for r in rows]
 
+    def find_active_by_canonical_key(
+        self, owner_id: str, canonical_key: str
+    ) -> MemoryRecord | None:
+        """Return this owner's active memory with the given canonical key, if any.
+
+        Used by capture to detect corrections/duplicates of the same fact.
+        """
+        row = self._conn.execute(
+            "SELECT * FROM memories WHERE owner_id = ? AND canonical_key = ? AND status = ? "
+            "ORDER BY created_at ASC, id ASC LIMIT 1",
+            (owner_id, canonical_key, MemoryStatus.ACTIVE.value),
+        ).fetchone()
+        return row_to_memory(row) if row is not None else None
+
     def audit_events_for(self, owner_id: str, memory_id: str) -> list[AuditEvent]:
         """Return the append-only audit trail for one memory, scoped to its owner."""
         rows = self._conn.execute(

@@ -35,6 +35,11 @@ MODULES = [
     "aira.memory.vault.mapper",
     "aira.memory.vault.repository",
     "aira.memory.vault.backup",
+    "aira.memory.capture",
+    "aira.memory.capture.models",
+    "aira.memory.capture.extraction",
+    "aira.memory.capture.evaluation",
+    "aira.memory.capture.service",
     "aira.chat",
     "aira.evaluation",
 ]
