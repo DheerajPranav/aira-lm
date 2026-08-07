@@ -40,6 +40,13 @@ MODULES = [
     "aira.memory.capture.extraction",
     "aira.memory.capture.evaluation",
     "aira.memory.capture.service",
+    "aira.memory.recall",
+    "aira.memory.recall.models",
+    "aira.memory.recall.tokenize",
+    "aira.memory.recall.interface",
+    "aira.memory.recall.bm25",
+    "aira.memory.recall.fts",
+    "aira.memory.recall.factory",
     "aira.chat",
     "aira.evaluation",
 ]

@@ -17,7 +17,12 @@ from aira.memory.vault.backup import (
 from aira.memory.vault.connection import connect
 from aira.memory.vault.errors import ImportRejectedError, NotFoundError, VaultError
 from aira.memory.vault.repository import MemoryRepository
-from aira.memory.vault.schema import SCHEMA_VERSION, apply_migrations
+from aira.memory.vault.schema import (
+    SCHEMA_VERSION,
+    apply_migrations,
+    ensure_search_index,
+    search_enabled,
+)
 
 __all__ = [
     "MAX_IMPORT_BYTES",
@@ -29,7 +34,9 @@ __all__ = [
     "apply_migrations",
     "backup_database",
     "connect",
+    "ensure_search_index",
     "export_jsonl",
     "import_jsonl",
     "integrity_check",
+    "search_enabled",
 ]

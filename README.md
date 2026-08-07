@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-05_capture_and_evaluation-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-06_aira_recall-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -30,22 +30,23 @@ when asked.
 
 ## Where this project is right now
 
-**This repository is at Stage 05 of 15.** In place so far: the control plane; the
+**This repository is at Stage 06 of 15.** In place so far: the control plane; the
 **project foundation** (Python 3.12 package, config, determinism/device utilities, an
 `aira` CLI); the **typed memory domain** (immutable validated records, deterministic
 hashing, a lifecycle state machine with content-free tombstones); **Aira Guard**, the
 offline pre-persistence privacy gate that detects and redacts secrets without ever
 emitting a raw value; **Aira Vault & Trail** — owner-scoped, parameterized SQLite
-persistence with versioned migrations, single-transaction memory-plus-audit writes, a
-content-free audit trail, row-deleting hard delete, and guard-screened import/export;
-and **Capture** — the deterministic write path that extracts candidates from a turn,
-screens them through the guard, evaluates their utility, refuses to promote assistant
-statements, and resolves corrections by superseding (with a transparent policy trace).
-All under passing test, lint and type-check gates (200 tests). **No retrieval, chat or
-model behaviour is implemented yet**, and no model, tokenizer or checkpoint exists.
-Nothing here claims to be trained, fast, fluent, or production-ready. Every capability
-still ahead is a *design commitment* that becomes real only when a repeatable test or
-benchmark proves it.
+persistence with single-transaction memory-plus-audit writes, a content-free audit
+trail, and guard-screened import/export; **Capture** — the deterministic write path
+(extract → guard → evaluate → supersede on correction, with a policy trace); and **Aira
+Recall** — owner-scoped, lifecycle-aware keyword retrieval (SQLite FTS5 with a
+deterministic BM25 fallback) whose index holds only active content and re-checks owner
+and status on every hit, so forgotten, superseded, expired, deleted and cross-owner
+memories can never surface. All under passing test, lint and type-check gates (242
+tests). **No ranking/context composition, chat or model behaviour is implemented yet**,
+and no model, tokenizer or checkpoint exists. Nothing here claims to be trained, fast,
+fluent, or production-ready. Every capability still ahead is a *design commitment* that
+becomes real only when a repeatable test or benchmark proves it.
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
 performance property is claimed without a test that demonstrates it.*
@@ -142,7 +143,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 03 Aira Guard (secret detection + redaction) | Complete |
 | Stage 04 Aira Vault & Trail (SQLite storage + audit) | Complete |
 | Stage 05 Capture (extraction, write-gate, superseding) | Complete |
-| Memory runtime — retrieval/ranking/chat (Stages 06–10) | Not started |
+| Stage 06 Aira Recall (FTS5/BM25 keyword retrieval) | Complete |
+| Memory runtime — ranking/context/chat (Stages 07–10) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

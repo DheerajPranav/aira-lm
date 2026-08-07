@@ -35,6 +35,7 @@ from aira.memory.vault.mapper import (
     row_to_audit,
     row_to_memory,
 )
+from aira.memory.vault.schema import search_enabled
 
 _INACTIVE_EXPORTABLE = (
     MemoryStatus.ACTIVE,
@@ -51,6 +52,8 @@ class MemoryRepository:
     def __init__(self, connection: sqlite3.Connection) -> None:
         """Wrap an open, migrated SQLite connection."""
         self._conn = connection
+        # When the FTS5 index exists, keep it in sync so it holds only active content.
+        self._fts_enabled = search_enabled(connection)
 
     # --- reads ---------------------------------------------------------------------
 
@@ -95,6 +98,27 @@ class MemoryRepository:
         params += [limit, offset]
         rows = self._conn.execute(sql, params).fetchall()
         return [row_to_memory(r) for r in rows]
+
+    @property
+    def fts_enabled(self) -> bool:
+        """Whether an FTS5 search index is active for this repository."""
+        return self._fts_enabled
+
+    def fts_search(self, match_expr: str, *, limit: int) -> list[tuple[str, float]]:
+        """Return (memory_id, bm25 rank) pairs matching an FTS5 MATCH expression.
+
+        Lower rank is a better match. Owner and lifecycle filtering happen after this
+        call (the caller re-fetches each id with :meth:`get`, which is owner-scoped and
+        active-only), so this is a candidate generator, not the final result set.
+        """
+        if not self._fts_enabled:
+            return []
+        rows = self._conn.execute(
+            "SELECT memory_id, bm25(memories_fts) AS rank FROM memories_fts "
+            "WHERE memories_fts MATCH ? ORDER BY rank ASC, memory_id ASC LIMIT ?",
+            (match_expr, limit),
+        ).fetchall()
+        return [(r["memory_id"], float(r["rank"])) for r in rows]
 
     def find_active_by_canonical_key(
         self, owner_id: str, canonical_key: str
@@ -376,6 +400,8 @@ class MemoryRepository:
             f"INSERT INTO memories ({columns}) VALUES ({placeholders})",  # noqa: S608 - fixed columns
             row,
         )
+        if record.status is MemoryStatus.ACTIVE:
+            self._fts_index(record.id, record.content)
 
     def _update_row(self, record: MemoryRecord) -> None:
         row = memory_to_row(record)
@@ -384,12 +410,33 @@ class MemoryRepository:
             f"UPDATE memories SET {assignments} WHERE id = :id AND owner_id = :owner_id",  # noqa: S608
             row,
         )
+        # Keep the index active-only: reindex if still active, drop it otherwise.
+        if record.status is MemoryStatus.ACTIVE:
+            self._fts_reindex(record.id, record.content)
+        else:
+            self._fts_deindex(record.id)
 
     def _delete_row(self, owner_id: str, memory_id: str) -> None:
         self._conn.execute(
             "DELETE FROM memories WHERE owner_id = ? AND id = ?",
             (owner_id, memory_id),
         )
+        self._fts_deindex(memory_id)
+
+    def _fts_index(self, memory_id: str, content: str) -> None:
+        if self._fts_enabled:
+            self._conn.execute(
+                "INSERT INTO memories_fts (memory_id, content) VALUES (?, ?)",
+                (memory_id, content),
+            )
+
+    def _fts_deindex(self, memory_id: str) -> None:
+        if self._fts_enabled:
+            self._conn.execute("DELETE FROM memories_fts WHERE memory_id = ?", (memory_id,))
+
+    def _fts_reindex(self, memory_id: str, content: str) -> None:
+        self._fts_deindex(memory_id)
+        self._fts_index(memory_id, content)
 
     def _insert_audit(self, event: AuditEvent) -> None:
         row = audit_to_row(event)

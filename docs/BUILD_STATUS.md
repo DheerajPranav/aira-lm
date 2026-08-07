@@ -2,9 +2,9 @@
 
 ## Current stage
 
-- Stage: 05 — Capture and Evaluation
-- Status: Complete (deterministic write path; no retrieval, no chat, no model)
-- Last verified commit: Step 05 commit of `aira-lm` (2026-08-08)
+- Stage: 06 — Aira Recall
+- Status: Complete (owner-scoped keyword retrieval; no ranking/context, no chat, no model)
+- Last verified commit: Step 06 commit of `aira-lm` (2026-08-08)
 - Last updated: 2026-08-08 by Claude Code
 
 ## Stage checklist
@@ -17,7 +17,7 @@
 | 03 | Aira Guard | Complete | `src/aira/memory/guard/*` (interface, detectors, redaction, guard); 156 tests; pytest/ruff/mypy green; ADR-011 |
 | 04 | Aira Vault and Trail | Complete | `src/aira/memory/{vault,trail}/*`; 180 tests; pytest/ruff/mypy green; ADR-012 |
 | 05 | Capture and evaluation | Complete | `src/aira/memory/capture/*`; 200 tests; pytest/ruff/mypy green; ADR-013 |
-| 06 | Aira Recall | Pending | |
+| 06 | Aira Recall | Complete | `src/aira/memory/recall/*` + vault FTS index; 242 tests; pytest/ruff/mypy green; ADR-014 |
 | 07 | Ranking and context | Pending | |
 | 08 | Chat integration | Pending | |
 | 09 | Aira Fade and governance | Pending | |
@@ -36,7 +36,7 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 | Python interpreter (system) | 3.13.0 — target is 3.12; Step 01 must pin via `uv` (RISKS R1) |
 | `uv` | 0.12.1 |
 | SQLite runtime | 3.47.0 |
-| SQLite FTS5 | Available (re-verify at runtime in Step 06) |
+| SQLite FTS5 | Available and used (Step 06); BM25 fallback implemented and tested |
 | Control-tower gate | `scripts/verify_step00.sh` → PASS (docs, links, 15 stage gates, 12 invariants, no runtime code) |
 
 ## Step 00 record — 2026-08-04
@@ -201,12 +201,42 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 06 — `./scripts/start_step.sh 06`.
 
+## Step 06 record — 2026-08-08
+
+- **Files created:** `src/aira/memory/recall/{__init__,models,tokenize,interface,bm25,fts,factory}.py`,
+  `tests/test_recall.py`, `adr/014-active-only-index-and-refetch-filtering.md`.
+- **Files modified:** `src/aira/memory/vault/{schema,connection,repository,__init__}.py`
+  (FTS5 index + maintenance + `fts_search`/`fts_enabled`), `tests/test_imports.py`,
+  `docs/BUILD_STATUS.md`, `README.md` (status bump).
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **242 passed** (42 new recall tests across both backends + 200 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **108 files formatted**.
+  - `mypy src` (strict) → **no issues in 43 source files**.
+- **What was built:** a `Retriever` protocol; an FTS5 index maintained by the vault so it
+  holds only active content; an `Fts5Retriever` that uses the index as a candidate
+  generator then re-fetches through the owner-scoped, active-only `get`; a deterministic
+  pure-Python `Bm25Retriever` fallback over the live active set; kind/lifetime/project/
+  tag filters; safe bounded query tokenization; explainable scores; and deferred
+  vector/graph protocols.
+- **Invariant coverage (tested, both backends):** owner isolation (inv. 1); forgotten /
+  superseded / expired / hard-deleted content excluded and FTS index purged (inv. 2);
+  index updates after correction; empty/malformed/zero-limit queries safe; deterministic
+  results (inv. 12); retrieval latency bounded on a 300-memory fixture.
+- **Measured metrics:** 242 tests; FTS5 available and used; retrieval < 2 s on 300
+  memories; still **0** third-party runtime deps.
+- **ADR changes:** ADR-014 added (active-only index + re-fetch filtering + BM25 fallback).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 07 — `./scripts/start_step.sh 07`.
+
 ## Known limitations
 
-- Extraction is a documented, non-exhaustive regex heuristic set (ADR-013);
-  unrecognized phrasings are simply not stored rather than stored wrongly.
-- No retrieval/search (Step 06), chat (Step 08) or model code yet. Memories can be
-  written and superseded but not yet searched or composed into context.
+- Retrieval is keyword-based only; no semantic/vector recall is claimed (vector/graph
+  retrievers are deferred protocols).
+- No ranking fusion or context-budget composition yet (Step 07), no chat (Step 08),
+  no model. Recall finds and orders memories but does not build model context.
+- Extraction (Step 05) remains a documented, non-exhaustive regex heuristic set.
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

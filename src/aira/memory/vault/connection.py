@@ -10,7 +10,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from aira.memory.vault.schema import apply_migrations
+from aira.memory.vault.schema import apply_migrations, ensure_search_index
 
 
 def connect(database_path: str | Path) -> sqlite3.Connection:
@@ -26,4 +26,5 @@ def connect(database_path: str | Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     apply_migrations(conn)
+    ensure_search_index(conn)  # no-op if FTS5 is unavailable; Recall then uses BM25
     return conn

@@ -65,6 +65,43 @@ CREATE INDEX idx_audit_owner_memory ON audit_events (owner_id, memory_id);
 # Ordered (version, DDL) pairs. Append new migrations; never rewrite old ones.
 MIGRATIONS: list[tuple[int, str]] = [(1, _MIGRATION_1)]
 
+# FTS5 full-text index over active memory content. Created only when the SQLite build
+# supports FTS5; otherwise Aira Recall falls back to a deterministic BM25 scan (ADR-003).
+_SEARCH_INDEX_DDL = """
+CREATE VIRTUAL TABLE memories_fts USING fts5(
+    memory_id UNINDEXED,
+    content,
+    tokenize = 'unicode61'
+);
+"""
+
+_FTS_TABLE = "memories_fts"
+
+
+def search_enabled(conn: sqlite3.Connection) -> bool:
+    """Return whether the FTS5 search index table exists on this connection."""
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (_FTS_TABLE,),
+    ).fetchone()
+    return row is not None
+
+
+def ensure_search_index(conn: sqlite3.Connection) -> bool:
+    """Create the FTS5 search index if the SQLite build supports it.
+
+    Returns ``True`` if the index exists (or was created), ``False`` when FTS5 is
+    unavailable — the caller then uses the BM25 fallback. Idempotent.
+    """
+    if search_enabled(conn):
+        return True
+    try:
+        with conn:
+            conn.executescript(_SEARCH_INDEX_DDL)
+    except sqlite3.OperationalError:
+        return False
+    return True
+
 
 def _current_version(conn: sqlite3.Connection) -> int:
     conn.execute("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)")
