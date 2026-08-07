@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-03_aira_guard-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-04_aira_vault_and_trail-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -30,20 +30,20 @@ when asked.
 
 ## Where this project is right now
 
-**This repository is at Stage 03 of 15.** In place so far: the control plane (plan,
+**This repository is at Stage 04 of 15.** In place so far: the control plane (plan,
 invariants, threat model, evaluation gates); the **project foundation** (a Python 3.12
-package, config loading/validation, determinism and device utilities, and an `aira` CLI
-with `--version`, `--help`, `doctor`); the **typed memory domain** — immutable, validated
-records with provenance, deterministic content hashing, and a lifecycle state machine
-whose hard-delete yields a content-free tombstone; and **Aira Guard**, the
-pre-persistence privacy gate — deterministic, offline detection and redaction of secrets
-(keys, tokens, private keys, passwords, credential URLs, cookies, payment cards) that
-never emits a raw value, plus do-not-remember and instruction-override flagging. All of
-it under passing test, lint and type-check gates (156 tests). **No persistence, retrieval
-or model behaviour is implemented yet**, and no model, tokenizer or checkpoint exists.
-Nothing here claims to be trained, fast, fluent, or production-ready. Every capability
-still ahead is a *design commitment* that becomes real only when a repeatable test or
-benchmark proves it.
+package, config, determinism and device utilities, and an `aira` CLI); the **typed
+memory domain** (immutable validated records, deterministic hashing, a lifecycle state
+machine with content-free tombstones); **Aira Guard**, the offline pre-persistence
+privacy gate that detects and redacts secrets without ever emitting a raw value; and
+**Aira Vault & Trail** — owner-scoped, parameterized SQLite persistence with versioned
+migrations, single-transaction memory-plus-audit writes, an append-only content-free
+audit trail, row-deleting hard delete, idempotent create, and guard-screened JSONL
+import/export with backup. All of it under passing test, lint and type-check gates (180
+tests). **No retrieval, chat or model behaviour is implemented yet**, and no model,
+tokenizer or checkpoint exists. Nothing here claims to be trained, fast, fluent, or
+production-ready. Every capability still ahead is a *design commitment* that becomes real
+only when a repeatable test or benchmark proves it.
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
 performance property is claimed without a test that demonstrates it.*
@@ -138,7 +138,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 01 foundation (package, config, CLI, gates) | Complete |
 | Stage 02 memory domain (records, lifecycle, hashing) | Complete |
 | Stage 03 Aira Guard (secret detection + redaction) | Complete |
-| Memory runtime — storage/retrieval/chat (Stages 04–10) | Not started |
+| Stage 04 Aira Vault & Trail (SQLite storage + audit) | Complete |
+| Memory runtime — capture/retrieval/chat (Stages 05–10) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

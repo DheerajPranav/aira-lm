@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 03 — Aira Guard
-- Status: Complete (pre-persistence gate; no storage, no LLM, no PII service)
-- Last verified commit: Step 03 commit of `aira-lm` (2026-08-06)
-- Last updated: 2026-08-06 by Claude Code
+- Stage: 04 — Aira Vault and Trail
+- Status: Complete (local persistence + audit; no retrieval, no chat, no model)
+- Last verified commit: Step 04 commit of `aira-lm` (2026-08-07)
+- Last updated: 2026-08-07 by Claude Code
 
 ## Stage checklist
 
@@ -15,7 +15,7 @@
 | 01 | Repository foundation | Complete | `pyproject.toml`, `src/aira/{config,seed,device,cli}`, 42 tests; pytest/ruff/mypy all green; `aira doctor` OK |
 | 02 | Schema and lifecycle | Complete | `src/aira/memory/domain/*` (enums, records, lifecycle, hashing, clock); 119 tests; pytest/ruff/mypy green; ADR-010 |
 | 03 | Aira Guard | Complete | `src/aira/memory/guard/*` (interface, detectors, redaction, guard); 156 tests; pytest/ruff/mypy green; ADR-011 |
-| 04 | Aira Vault and Trail | Pending | |
+| 04 | Aira Vault and Trail | Complete | `src/aira/memory/{vault,trail}/*`; 180 tests; pytest/ruff/mypy green; ADR-012 |
 | 05 | Capture and evaluation | Pending | |
 | 06 | Aira Recall | Pending | |
 | 07 | Ranking and context | Pending | |
@@ -139,12 +139,47 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 04 — `./scripts/start_step.sh 04`.
 
+## Step 04 record — 2026-08-07
+
+- **Files created:** `src/aira/memory/trail/{__init__,events}.py`,
+  `src/aira/memory/vault/{__init__,errors,schema,connection,mapper,repository,backup}.py`,
+  `tests/test_vault.py`, `adr/012-vault-persistence-and-audit.md`.
+- **Files modified:** `tests/test_imports.py` (vault/trail modules), `docs/BUILD_STATUS.md`,
+  `README.md` (status bump).
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **180 passed** (24 new vault/trail tests + 156 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **92 files formatted**.
+  - `mypy src` (strict) → **no issues in 31 source files**.
+- **What was built:** versioned SQLite migrations; owner-scoped, parameterized
+  `MemoryRepository` with create/get/list/update/supersede/archive/expire/forget/
+  hard-delete; single-transaction state+audit writes; idempotent create; append-only
+  `AuditEvent` trail (content-free detail); row-deleting hard delete; JSONL export/import
+  (schema-checked, size-bounded, owner-rebinding, guard-screened, atomic); backup +
+  integrity check.
+- **Invariant coverage (tested):** owner A cannot get/list/update/forget/delete/export
+  owner B (inv. 1); rollback on injected audit failure (inv. 11); forgotten/superseded/
+  expired excluded by default (inv. 2); hard delete removes content and its audit holds
+  none (inv. 2, 7); audit event per mutation; parameterized SQL resists injection;
+  idempotency dedup; restart persistence; migration idempotency; import rejects
+  secrets/malformed/unknown-schema and writes nothing on rejection.
+- **Measured metrics:** 180 tests; still **0** third-party runtime deps (stdlib
+  `sqlite3`); zero content in hard-delete audit (asserted).
+- **ADR changes:** ADR-012 added (owner-scoped persistence, single-transaction audit,
+  row-deleting hard delete).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 05 — `./scripts/start_step.sh 05`.
+
 ## Known limitations
 
-- The guard detects a documented, non-exhaustive set of secret formats (precision over
-  recall by design, ADR-011); unusual formats may pass and are backstopped by capture.
-- No persistence, retrieval, capture or model code yet (later steps). The domain and
-  guard can validate and screen content but nothing is stored.
+- No retrieval/search (Step 06), capture/evaluation (Step 05), chat or model code yet.
+  The vault stores and audits lifecycle state but does not decide what to store or rank.
+- No at-rest encryption or key management is claimed; local file-system trust only
+  (documented in the threat model; a production gap for Step 14).
+- SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level
+  security); that is a documented migration target.
+- The guard detects a documented, non-exhaustive set of secret formats (ADR-011).
 - Only the project foundation + domain exist: config, determinism, device selection, a
   CLI skeleton, and the typed memory domain. No memory *runtime* or model behaviour yet.
 - `MODEL_CARD.md` explicitly states no model/tokenizer/checkpoint exists yet.
