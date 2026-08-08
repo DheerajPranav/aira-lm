@@ -47,6 +47,12 @@ MODULES = [
     "aira.memory.recall.bm25",
     "aira.memory.recall.fts",
     "aira.memory.recall.factory",
+    "aira.memory.ranking",
+    "aira.memory.ranking.tokenizer",
+    "aira.memory.ranking.models",
+    "aira.memory.ranking.scoring",
+    "aira.memory.ranking.dedup",
+    "aira.memory.ranking.context",
     "aira.chat",
     "aira.evaluation",
 ]

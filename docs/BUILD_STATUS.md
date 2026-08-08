@@ -2,9 +2,9 @@
 
 ## Current stage
 
-- Stage: 06 — Aira Recall
-- Status: Complete (owner-scoped keyword retrieval; no ranking/context, no chat, no model)
-- Last verified commit: Step 06 commit of `aira-lm` (2026-08-08)
+- Stage: 07 — Ranking and Context
+- Status: Complete (score fusion + bounded untrusted context; no chat, no model)
+- Last verified commit: Step 07 commit of `aira-lm` (2026-08-08)
 - Last updated: 2026-08-08 by Claude Code
 
 ## Stage checklist
@@ -18,7 +18,7 @@
 | 04 | Aira Vault and Trail | Complete | `src/aira/memory/{vault,trail}/*`; 180 tests; pytest/ruff/mypy green; ADR-012 |
 | 05 | Capture and evaluation | Complete | `src/aira/memory/capture/*`; 200 tests; pytest/ruff/mypy green; ADR-013 |
 | 06 | Aira Recall | Complete | `src/aira/memory/recall/*` + vault FTS index; 242 tests; pytest/ruff/mypy green; ADR-014 |
-| 07 | Ranking and context | Pending | |
+| 07 | Ranking and context | Complete | `src/aira/memory/ranking/*`; 267 tests; pytest/ruff/mypy green; ADR-015 |
 | 08 | Chat integration | Pending | |
 | 09 | Aira Fade and governance | Pending | |
 | 10 | Aira Bench | Pending | |
@@ -230,13 +230,40 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 07 — `./scripts/start_step.sh 07`.
 
+## Step 07 record — 2026-08-08
+
+- **Files created:** `src/aira/memory/ranking/{__init__,tokenizer,models,scoring,dedup,context}.py`,
+  `tests/test_ranking.py`, `adr/015-ranking-and-untrusted-context.md`.
+- **Files modified:** `tests/test_imports.py`, `docs/BUILD_STATUS.md`, `README.md` (status bump).
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **267 passed** (19 new ranking tests + 248 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **116 files formatted**.
+  - `mypy src` (strict) → **no issues in 49 source files**.
+- **What was built:** a minimal `Tokenizer` protocol + UTF-8 `ByteTokenizer`; a
+  deterministic `Ranker` fusing eight configurable, normalized components with full
+  weighted breakdowns; canonical + near-identical deduplication; and a `ContextComposer`
+  that wraps memories in delimited untrusted-data markers (with delimiter-breakout
+  sanitization), enforces top-k and an exact byte-token budget, and records per-memory
+  include/exclude reasons (debug ids hidden by default).
+- **Invariant coverage (tested):** retrieved memory kept as delimited untrusted data and
+  injection/breakout neutralized (inv. 8); exact budget boundary + multibyte + never-
+  overflow across budgets (inv. 10); inactive-state defense in depth (inv. 2); score
+  components, ordering, tie determinism, dedup, top-k (inv. 12).
+- **Measured metrics:** 267 tests; context never exceeds budget for any input; still
+  **0** third-party runtime deps.
+- **ADR changes:** ADR-015 added (score fusion + delimited budgeted untrusted context).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 08 — `./scripts/start_step.sh 08`.
+
 ## Known limitations
 
-- Retrieval is keyword-based only; no semantic/vector recall is claimed (vector/graph
-  retrievers are deferred protocols).
-- No ranking fusion or context-budget composition yet (Step 07), no chat (Step 08),
-  no model. Recall finds and orders memories but does not build model context.
-- Extraction (Step 05) remains a documented, non-exhaustive regex heuristic set.
+- Ranking uses deterministic weighted fusion (no learned reranker); budget is counted in
+  byte tokens via a stand-in tokenizer until Aira Core's tokenizer lands (Step 11).
+- No chat engine or generation backend yet (Step 08); the memory block is built but not
+  yet handed to a backend. No model.
+- Retrieval remains keyword-only; extraction remains a documented regex heuristic set.
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

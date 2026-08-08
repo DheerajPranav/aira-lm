@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-06_aira_recall-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-07_ranking_and_context-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -42,11 +42,14 @@ trail, and guard-screened import/export; **Capture** — the deterministic write
 Recall** — owner-scoped, lifecycle-aware keyword retrieval (SQLite FTS5 with a
 deterministic BM25 fallback) whose index holds only active content and re-checks owner
 and status on every hit, so forgotten, superseded, expired, deleted and cross-owner
-memories can never surface. All under passing test, lint and type-check gates (242
-tests). **No ranking/context composition, chat or model behaviour is implemented yet**,
-and no model, tokenizer or checkpoint exists. Nothing here claims to be trained, fast,
-fluent, or production-ready. Every capability still ahead is a *design commitment* that
-becomes real only when a repeatable test or benchmark proves it.
+memories can never surface; and **Ranking & Context** — deterministic score fusion
+(eight configurable signals with full breakdowns), canonical/near-identical dedup, and a
+delimited **untrusted-memory** block held within an exact byte-token budget, so retrieved
+memory is always quoted data, never instructions, and never overflows the context. All
+under passing test, lint and type-check gates (267 tests). **No chat or model behaviour
+is implemented yet**, and no model, tokenizer or checkpoint exists. Nothing here claims
+to be trained, fast, fluent, or production-ready. Every capability still ahead is a
+*design commitment* that becomes real only when a repeatable test or benchmark proves it.
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
 performance property is claimed without a test that demonstrates it.*
@@ -144,7 +147,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 04 Aira Vault & Trail (SQLite storage + audit) | Complete |
 | Stage 05 Capture (extraction, write-gate, superseding) | Complete |
 | Stage 06 Aira Recall (FTS5/BM25 keyword retrieval) | Complete |
-| Memory runtime — ranking/context/chat (Stages 07–10) | Not started |
+| Stage 07 Ranking & Context (fusion, dedup, budget) | Complete |
+| Memory runtime — chat/governance/bench (Stages 08–10) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |
