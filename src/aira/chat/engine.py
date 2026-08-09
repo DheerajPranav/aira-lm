@@ -22,6 +22,8 @@ from aira.memory.capture import CaptureService, Speaker
 from aira.memory.capture.models import CaptureResult
 from aira.memory.domain.clock import utc_now
 from aira.memory.domain.records import MemoryRecord
+from aira.memory.fade import FadeJob, FadeReport
+from aira.memory.governance import Explanation, GovernanceService
 from aira.memory.guard import default_guard
 from aira.memory.ranking import (
     ByteTokenizer,
@@ -54,6 +56,8 @@ class ChatEngine:
         budget: int,
         top_k: int,
         retrieve_limit: int = 50,
+        governance: GovernanceService | None = None,
+        fade: FadeJob | None = None,
     ) -> None:
         """Assemble the engine from its collaborators (dependency-injected)."""
         self._capture = capture
@@ -65,6 +69,8 @@ class ChatEngine:
         self._budget = budget
         self._top_k = top_k
         self._retrieve_limit = retrieve_limit
+        self._governance = governance
+        self._fade = fade
 
     def chat(
         self, owner_id: str, message: str, *, now: datetime | None = None, debug: bool = False
@@ -119,6 +125,23 @@ class ChatEngine:
         except NotFoundError:
             return False
         return True
+
+    @property
+    def governance(self) -> GovernanceService:
+        """The governance service, or raise if this engine was built without one."""
+        if self._governance is None:
+            raise RuntimeError("this engine has no governance service")
+        return self._governance
+
+    def explain(self, owner_id: str, memory_id: str) -> Explanation:
+        """Return a memory's record and audit trail."""
+        return self.governance.explain(owner_id, memory_id)
+
+    def run_fade(self, *, now: datetime | None = None, owner_id: str | None = None) -> FadeReport:
+        """Run the fade job on demand; raise if this engine was built without one."""
+        if self._fade is None:
+            raise RuntimeError("this engine has no fade job")
+        return self._fade.run(now=now or utc_now(), owner_id=owner_id)
 
     # --- pipeline stages -----------------------------------------------------------
 
@@ -185,4 +208,6 @@ def create_chat_engine(
         tokenizer=ByteTokenizer(),
         budget=config.memory.context_token_budget,
         top_k=config.memory.top_k,
+        governance=GovernanceService(repository, guard),
+        fade=FadeJob(repository, config.decay),
     )

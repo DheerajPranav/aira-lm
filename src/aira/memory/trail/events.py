@@ -32,6 +32,7 @@ class AuditAction(StrEnum):
     FORGET = "forget"
     HARD_DELETE = "hard_delete"
     IMPORT = "import"
+    REINFORCE = "reinforce"
 
 
 def new_event_id() -> str:

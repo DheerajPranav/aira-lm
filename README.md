@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-08_chat_integration-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-09_fade_and_governance-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -49,10 +49,14 @@ memory is always quoted data, never instructions, and never overflows the contex
 **Chat Integration** — the full pipeline wired to a deterministic mock backend
 (guard→decide→mutate→retrieve→rank→compose→generate), with correlation ids, latency
 metadata, and isolated failures that degrade to a no-memory response, plus an `aira chat`
-CLI. **The complete Aira Memory lifecycle now works end to end** — remember, recall,
-correct, forget, block-unsafe, owner isolation — under passing test, lint and type-check
-gates (287 tests). **The generation backend is a deterministic mock, not a trained
-model**; there is no model, tokenizer or checkpoint yet. Nothing here claims to be
+CLI; and **Aira Fade & Governance** — a manually-invokable decay/expiry/archival job
+(type-specific, deterministic, and it *never* hard-deletes) plus explicit owner controls
+(inspect, explain with audit trail, guard-screened correction, reinforcement only on
+usefulness, forget, export, atomic guard-screened import, owner-scoped delete-all).
+**The complete Aira Memory lifecycle now works end to end** — remember, recall, correct,
+forget, decay/expire, block-unsafe, owner isolation — under passing test, lint and
+type-check gates (306 tests). **The generation backend is a deterministic mock, not a
+trained model**; there is no model, tokenizer or checkpoint yet. Nothing here claims to be
 trained, fast, fluent, or production-ready. Every capability still ahead is a *design
 commitment* that becomes real only when a repeatable test or benchmark proves it.
 
@@ -161,7 +165,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 06 Aira Recall (FTS5/BM25 keyword retrieval) | Complete |
 | Stage 07 Ranking & Context (fusion, dedup, budget) | Complete |
 | Stage 08 Chat Integration (mock backend, degradation) | Complete |
-| Memory runtime — governance + benchmark (Stages 09–10) | Not started |
+| Stage 09 Aira Fade & Governance (decay + user controls) | Complete |
+| Aira Bench — golden + adversarial evaluation (Stage 10) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

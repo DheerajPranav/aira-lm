@@ -48,6 +48,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     chat.add_argument("--owner", default=None, help="Owner id (defaults to config value).")
     chat.set_defaults(func=_cmd_chat)
+
+    fade = subparsers.add_parser(
+        "fade",
+        help="Run the decay/expiry/archival job once (never hard-deletes).",
+    )
+    fade.add_argument("--owner", default=None, help="Restrict to one owner (default: all).")
+    fade.set_defaults(func=_cmd_fade)
     return parser
 
 
@@ -66,6 +73,21 @@ def _cmd_chat(args: argparse.Namespace) -> int:
         "Type a message, or a command. /exit to quit.\n"
     )
     run_session(engine, owner, sys.stdin, sys.stdout)
+    return 0
+
+
+def _cmd_fade(args: argparse.Namespace) -> int:
+    """Run the fade job once over the configured database. Returns an exit code."""
+    from aira.chat import create_chat_engine
+    from aira.memory.vault import connect
+
+    cfg = load_config(DEFAULT_CONFIG_PATH)
+    engine = create_chat_engine(cfg, connect(cfg.runtime.database_path))
+    report = engine.run_fade(owner_id=args.owner)
+    sys.stdout.write(
+        f"Aira Fade: scanned={report.scanned} archived={report.archived_count} "
+        f"expired={report.expired_count}\n"
+    )
     return 0
 
 

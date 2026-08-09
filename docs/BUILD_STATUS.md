@@ -2,9 +2,9 @@
 
 ## Current stage
 
-- Stage: 08 — Chat Integration
-- Status: Complete (full memory lifecycle via mock backend; graceful degradation; no PyTorch)
-- Last verified commit: Step 08 commit of `aira-lm` (2026-08-09)
+- Stage: 09 — Aira Fade and Governance
+- Status: Complete (decay/expiry/archival + user controls; no scheduler; no model)
+- Last verified commit: Step 09 commit of `aira-lm` (2026-08-09)
 - Last updated: 2026-08-09 by Claude Code
 
 ## Stage checklist
@@ -20,7 +20,7 @@
 | 06 | Aira Recall | Complete | `src/aira/memory/recall/*` + vault FTS index; 242 tests; pytest/ruff/mypy green; ADR-014 |
 | 07 | Ranking and context | Complete | `src/aira/memory/ranking/*`; 267 tests; pytest/ruff/mypy green; ADR-015 |
 | 08 | Chat integration | Complete | `src/aira/chat/*` + `aira chat`; 287 tests; pytest/ruff/mypy green; ADR-016 |
-| 09 | Aira Fade and governance | Pending | |
+| 09 | Aira Fade and governance | Complete | `src/aira/memory/{fade,governance}/*` + `aira fade`; 306 tests; pytest/ruff/mypy green; ADR-017 |
 | 10 | Aira Bench | Pending | |
 | 11 | Aira Core | Pending | |
 | 12 | Training and generation | Pending | |
@@ -286,14 +286,44 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 09 — `./scripts/start_step.sh 09`.
 
+## Step 09 record — 2026-08-09
+
+- **Files created:** `src/aira/memory/fade/{__init__,decay,job}.py`,
+  `src/aira/memory/governance/{__init__,service}.py`, `tests/test_governance.py`,
+  `adr/017-fade-and-governance.md`.
+- **Files modified:** `src/aira/memory/trail/events.py` (REINFORCE),
+  `src/aira/memory/vault/repository.py` (`reinforce`, `list_owners`, `set_policy`),
+  `src/aira/chat/{engine,session}.py`, `src/aira/cli/main.py` (`aira fade`),
+  `tests/test_imports.py`, `docs/BUILD_STATUS.md`, `README.md`.
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`, `uv run aira fade --help`.
+- **Test/verification results:**
+  - `pytest` → **306 passed** (19 new fade/governance tests + 287 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **129 files formatted**.
+  - `mypy src` (strict) → **no issues in 58 source files**.
+- **What was built:** a manually-invokable `FadeJob` (type-specific decay, archive-below-
+  threshold, retention expiry, **never hard-deletes**); a `GovernanceService` (inspect,
+  explain with audit trail, guard-screened correction/supersede, explicit reinforcement,
+  archive/forget/hard-delete, set-retention, export with forbidden-state filtering,
+  atomic guard-screened import, owner-scoped delete-all); repository primitives
+  (`reinforce`, `list_owners`, `set_policy`); chat session governance commands; and the
+  `aira fade` CLI.
+- **Invariant coverage (tested):** fixed-clock + kind-specific decay; retrieval does not
+  reinforce, explicit reinforcement does (feedback-poisoning control); archive threshold;
+  retention expiry; **no automatic hard delete** (inv. 2); inspect/explain; correction
+  supersedes and is guard-blocked on secrets; export excludes forbidden by default;
+  malformed import rolls back; delete-all owner-scoped (inv. 1); every action audited (inv. 4).
+- **Measured metrics:** 306 tests; still **0** third-party runtime deps.
+- **ADR changes:** ADR-017 added (manual fade job + explicit user governance).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 10 — `./scripts/start_step.sh 10`.
+
 ## Known limitations
 
-- The backend is a deterministic mock that echoes recalled facts; it makes no language-
-  quality claim. Aira Core integration is Step 13.
-- Retrieval failures degrade by catching exceptions (including a raised `TimeoutError`); a
-  hard preemptive timeout needs a thread-safe read path and is deferred (ADR-016).
-- Governance jobs (decay/expiry/archival, inspect/export/delete-all) are Step 09; no
-  model, training or benchmark yet.
+- Fade is manual (no scheduler); stale memories persist until a run is invoked.
+- The backend is a deterministic mock (no language-quality claim); Aira Core is Steps 11–13.
+- No versioned golden/adversarial benchmark yet (Step 10); no model, training or checkpoint.
+- Retrieval degrades by catching exceptions; a hard preemptive timeout is deferred (ADR-016).
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

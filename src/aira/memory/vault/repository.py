@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable, Sequence
+from dataclasses import replace
 from datetime import datetime
 
-from aira.memory.domain.enums import MemoryStatus
+from aira.memory.domain.clock import ensure_utc, utc_now
+from aira.memory.domain.enums import ConsentCategory, MemoryStatus, RetentionPolicy
 from aira.memory.domain.lifecycle import (
     SupersedeResult,
     TransitionResult,
@@ -147,6 +149,13 @@ class MemoryRepository:
         """Export this owner's memories. Excludes forbidden states unless asked otherwise."""
         statuses = _INACTIVE_EXPORTABLE if include_inactive else (MemoryStatus.ACTIVE,)
         return self.list_memories(owner_id, statuses=statuses, limit=1_000_000)
+
+    def list_owners(self) -> list[str]:
+        """Return the distinct owner ids present in the store (for maintenance jobs)."""
+        rows = self._conn.execute(
+            "SELECT DISTINCT owner_id FROM memories ORDER BY owner_id"
+        ).fetchall()
+        return [r["owner_id"] for r in rows]
 
     # --- writes --------------------------------------------------------------------
 
@@ -310,6 +319,84 @@ class MemoryRepository:
             self._delete_row(owner_id, memory_id)
             self._insert_audit(event)
         return tombstone
+
+    def reinforce(
+        self,
+        owner_id: str,
+        memory_id: str,
+        *,
+        now: datetime | None = None,
+        reason: str | None = None,
+    ) -> MemoryRecord:
+        """Increment an active memory's reinforcement count, writing a REINFORCE event.
+
+        This is only ever called on explicit usefulness evidence — never automatically as
+        a side effect of retrieval (see ADR-004 / the feedback-poisoning control).
+        """
+        current = self._load_for_transition(owner_id, memory_id)
+        if current.status is not MemoryStatus.ACTIVE:
+            raise NotFoundError(f"no active memory to reinforce: {memory_id}")
+        at = ensure_utc(now, "now") if now is not None else utc_now()
+        updated = replace(
+            current, reinforcement_count=current.reinforcement_count + 1, updated_at=at
+        )
+        event = AuditEvent(
+            id=new_event_id(),
+            memory_id=memory_id,
+            owner_id=owner_id,
+            action=AuditAction.REINFORCE,
+            at=at,
+            reason=reason or "explicit usefulness reinforcement",
+            from_status=current.status,
+            to_status=updated.status,
+            detail={"reinforcement_count": updated.reinforcement_count},
+        )
+        with self._conn:
+            self._update_row(updated)
+            self._insert_audit(event)
+        return updated
+
+    def set_policy(
+        self,
+        owner_id: str,
+        memory_id: str,
+        *,
+        retention: RetentionPolicy | None = None,
+        consent: ConsentCategory | None = None,
+        expires_at: datetime | None = None,
+        now: datetime | None = None,
+        reason: str | None = None,
+    ) -> MemoryRecord:
+        """Set an active memory's retention/consent (explicit user control), audited.
+
+        User control overrides automated retention recommendations (invariant 9).
+        """
+        current = self._load_for_transition(owner_id, memory_id)
+        if current.status is not MemoryStatus.ACTIVE:
+            raise NotFoundError(f"no active memory to update policy: {memory_id}")
+        at = ensure_utc(now, "now") if now is not None else utc_now()
+        updated = replace(
+            current,
+            retention=retention if retention is not None else current.retention,
+            consent=consent if consent is not None else current.consent,
+            expires_at=expires_at if expires_at is not None else current.expires_at,
+            updated_at=at,
+        )
+        event = AuditEvent(
+            id=new_event_id(),
+            memory_id=memory_id,
+            owner_id=owner_id,
+            action=AuditAction.UPDATE,
+            at=at,
+            reason=reason or "policy updated by user",
+            from_status=current.status,
+            to_status=updated.status,
+            detail={"retention": updated.retention.value, "consent": updated.consent.value},
+        )
+        with self._conn:
+            self._update_row(updated)
+            self._insert_audit(event)
+        return updated
 
     def import_records(
         self, owner_id: str, records: Sequence[MemoryRecord], *, reason: str = "imported"
