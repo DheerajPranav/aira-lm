@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 07 — Ranking and Context
-- Status: Complete (score fusion + bounded untrusted context; no chat, no model)
-- Last verified commit: Step 07 commit of `aira-lm` (2026-08-08)
-- Last updated: 2026-08-08 by Claude Code
+- Stage: 08 — Chat Integration
+- Status: Complete (full memory lifecycle via mock backend; graceful degradation; no PyTorch)
+- Last verified commit: Step 08 commit of `aira-lm` (2026-08-09)
+- Last updated: 2026-08-09 by Claude Code
 
 ## Stage checklist
 
@@ -19,7 +19,7 @@
 | 05 | Capture and evaluation | Complete | `src/aira/memory/capture/*`; 200 tests; pytest/ruff/mypy green; ADR-013 |
 | 06 | Aira Recall | Complete | `src/aira/memory/recall/*` + vault FTS index; 242 tests; pytest/ruff/mypy green; ADR-014 |
 | 07 | Ranking and context | Complete | `src/aira/memory/ranking/*`; 267 tests; pytest/ruff/mypy green; ADR-015 |
-| 08 | Chat integration | Pending | |
+| 08 | Chat integration | Complete | `src/aira/chat/*` + `aira chat`; 287 tests; pytest/ruff/mypy green; ADR-016 |
 | 09 | Aira Fade and governance | Pending | |
 | 10 | Aira Bench | Pending | |
 | 11 | Aira Core | Pending | |
@@ -257,13 +257,43 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 08 — `./scripts/start_step.sh 08`.
 
+## Step 08 record — 2026-08-09
+
+- **Files created:** `src/aira/chat/{__init__,backend,models,engine,session}.py`,
+  `tests/test_chat.py`, `adr/016-chat-pipeline-and-graceful-degradation.md`.
+- **Files modified:** `src/aira/cli/main.py` (`aira chat` subcommand),
+  `tests/test_imports.py`, `docs/BUILD_STATUS.md`, `README.md` (status bump).
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`, `uv run aira chat` (piped smoke).
+- **Test/verification results:**
+  - `pytest` → **287 passed** (20 new chat tests + 267 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **122 files formatted**.
+  - `mypy src` (strict) → **no issues in 53 source files**.
+  - `aira chat` piped smoke → stored, listed and recalled "my editor is vim".
+- **What was built:** a model-agnostic `GenerationBackend` protocol + deterministic
+  `MockBackend`; a `ChatEngine` running guard→decide→mutate→retrieve→rank→compose→
+  generate with correlation ids, latency, debug-only metadata, and isolated write/read/
+  backend failures that degrade to a no-memory response; a testable slash-command session
+  (`/memories /memory /forget /debug /stats /reset /exit`); and the `aira chat` CLI.
+- **Invariant coverage (tested):** end-to-end remember/recall/correct/forget; unsafe
+  write blocked, nothing stored; owner isolation through chat (inv. 1); retrieval-timeout,
+  db-unavailable and malformed-memory all still return a response (inv. 3); untrusted
+  block reaches the backend (inv. 8); debug hides ids by default; latency + correlation id
+  present.
+- **Measured metrics:** 287 tests; the full Aira Memory lifecycle works through chat on a
+  deterministic mock backend; still **0** third-party runtime deps.
+- **ADR changes:** ADR-016 added (chat pipeline, model-agnostic backend, graceful degradation).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 09 — `./scripts/start_step.sh 09`.
+
 ## Known limitations
 
-- Ranking uses deterministic weighted fusion (no learned reranker); budget is counted in
-  byte tokens via a stand-in tokenizer until Aira Core's tokenizer lands (Step 11).
-- No chat engine or generation backend yet (Step 08); the memory block is built but not
-  yet handed to a backend. No model.
-- Retrieval remains keyword-only; extraction remains a documented regex heuristic set.
+- The backend is a deterministic mock that echoes recalled facts; it makes no language-
+  quality claim. Aira Core integration is Step 13.
+- Retrieval failures degrade by catching exceptions (including a raised `TimeoutError`); a
+  hard preemptive timeout needs a thread-safe read path and is deferred (ADR-016).
+- Governance jobs (decay/expiry/archival, inspect/export/delete-all) are Step 09; no
+  model, training or benchmark yet.
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

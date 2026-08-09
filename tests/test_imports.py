@@ -54,6 +54,10 @@ MODULES = [
     "aira.memory.ranking.dedup",
     "aira.memory.ranking.context",
     "aira.chat",
+    "aira.chat.backend",
+    "aira.chat.models",
+    "aira.chat.engine",
+    "aira.chat.session",
     "aira.evaluation",
 ]
 

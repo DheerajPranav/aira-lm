@@ -18,6 +18,9 @@ from aira import __version__
 from aira.config import DEFAULT_CONFIG_PATH, ConfigError, load_config
 from aira.device import describe_devices
 
+# Chat wiring is imported lazily inside the command to keep `aira doctor`/`--version`
+# free of heavier memory-runtime imports.
+
 _TARGET_PYTHON = (3, 12)
 
 
@@ -38,7 +41,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="Report environment, devices and configuration status.",
     )
     doctor.set_defaults(func=_cmd_doctor)
+
+    chat = subparsers.add_parser(
+        "chat",
+        help="Interactive memory chat over the deterministic mock backend.",
+    )
+    chat.add_argument("--owner", default=None, help="Owner id (defaults to config value).")
+    chat.set_defaults(func=_cmd_chat)
     return parser
+
+
+def _cmd_chat(args: argparse.Namespace) -> int:
+    """Start an interactive memory chat over the mock backend. Returns an exit code."""
+    from aira.chat import create_chat_engine, run_session
+    from aira.memory.vault import connect
+
+    cfg = load_config(DEFAULT_CONFIG_PATH)
+    owner = args.owner or cfg.memory.default_owner_id
+    connection = connect(cfg.runtime.database_path)
+    engine = create_chat_engine(cfg, connection)
+
+    sys.stdout.write(
+        "Aira chat (deterministic mock backend — not a trained model).\n"
+        "Type a message, or a command. /exit to quit.\n"
+    )
+    run_session(engine, owner, sys.stdin, sys.stdout)
+    return 0
 
 
 def _cmd_doctor(_args: argparse.Namespace, out: StringIO | None = None) -> int:
