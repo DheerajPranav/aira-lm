@@ -2,9 +2,9 @@
 
 ## Current stage
 
-- Stage: 10 — Aira Bench
-- Status: Complete (memory runtime evaluated; zero-tolerance gate green; no model)
-- Last verified commit: Step 10 commit of `aira-lm` (2026-08-11)
+- Stage: 11 — Aira Core
+- Status: Complete (tokenizer + transformer implemented; untrained; no checkpoint)
+- Last verified commit: Step 11 commit of `aira-lm` (2026-08-11)
 - Last updated: 2026-08-11 by Claude Code
 
 ## Stage checklist
@@ -22,7 +22,7 @@
 | 08 | Chat integration | Complete | `src/aira/chat/*` + `aira chat`; 287 tests; pytest/ruff/mypy green; ADR-016 |
 | 09 | Aira Fade and governance | Complete | `src/aira/memory/{fade,governance}/*` + `aira fade`; 306 tests; pytest/ruff/mypy green; ADR-017 |
 | 10 | Aira Bench | Complete | `src/aira/evaluation/*` + `benchmarks/scenarios.v1.jsonl` + `aira bench`; 329 tests; ADR-018 |
-| 11 | Aira Core | Pending | |
+| 11 | Aira Core | Complete | `src/aira/core/*` (tokenizer, model, backend); 6.52M params; 352 tests; ADR-019 |
 | 12 | Training and generation | Pending | |
 | 13 | Memory-conditioned evaluation | Pending | |
 | 14 | Release hardening | Pending | |
@@ -366,14 +366,42 @@ Recorded at Step 00:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 11 — `./scripts/start_step.sh 11`.
 
+## Step 11 record — 2026-08-11
+
+- **Files created:** `src/aira/core/{tokenizer,model,backend}.py`, `tests/test_core.py`,
+  `adr/019-aira-core-architecture.md`.
+- **Files modified:** `src/aira/core/__init__.py`, `pyproject.toml` (torch in dev group;
+  pytest warning filter), `uv.lock`, `MODEL_CARD.md`, `tests/test_imports.py`,
+  `docs/BUILD_STATUS.md`, `README.md`.
+- **Commands executed:** `uv sync` (installed torch 2.13.0), `uv run pytest`,
+  `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy src`.
+- **Test/verification results:**
+  - `pytest` → **352 passed** (20 new core tests + 332 existing) in ~2.4s.
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **140 files formatted**.
+  - `mypy src` (strict) → **no issues in 65 source files**.
+- **What was built:** a reversible UTF-8 byte tokenizer (vocab 256, invalid-byte safe); a
+  readable GPT-style decoder-only transformer (learned token+positional embeddings,
+  pre-norm blocks, explicit-mask multi-head causal attention, GELU FFN, tied LM head,
+  causal cross-entropy loss, exact parameter count, deterministic init, greedy decoding);
+  and a `TinyTransformerBackend` implementing the chat `GenerationBackend` protocol.
+- **Measured metrics:** default model **6,515,200 parameters** (5–10M target); forward
+  output shape `(B, T, 256)`; no-future-token influence verified; deterministic init +
+  greedy decoding; CPU and MPS forward smoke pass.
+- **Invariant coverage (tested):** measured parameter count (inv. 12); the memory runtime
+  keeps zero torch imports (two-system boundary).
+- **ADR changes:** ADR-019 added (Aira Core architecture; torch enters via dev/core).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 12 — `./scripts/start_step.sh 12`.
+
 ## Known limitations
 
-- The **memory runtime (Stages 02–10) is complete and evaluated**; Aira Core (the model)
-  does not exist yet — Steps 11–13.
-- Bench relevance is substring-based (suits known-fact scenarios; not a general relevance
-  model); no LLM judge by design.
-- Fade is manual (no scheduler); the generation backend is a deterministic mock.
-- Retrieval degrades by catching exceptions; a hard preemptive timeout is deferred (ADR-016).
+- **Aira Core is untrained** — outputs are meaningless; no checkpoint exists. Training,
+  checkpointing and temperature/top-k generation are Step 12; memory-conditioned
+  evaluation is Step 13.
+- PyTorch is now installed (dev group + `core` extra); the memory runtime still imports no
+  torch, preserving the two-system boundary in code.
+- Bench relevance is substring-based; no LLM judge. Fade is manual; retrieval degrades by
+  catching exceptions (hard timeout deferred, ADR-016).
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

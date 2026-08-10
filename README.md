@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-10_aira_bench-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-11_aira_core-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -56,13 +56,17 @@ usefulness, forget, export, atomic guard-screened import, owner-scoped delete-al
 **Aira Bench** — a versioned golden + adversarial benchmark (20 scenarios) that measures
 retrieval quality against no-memory/Aira/full-history baselines and enforces the four
 zero-tolerance metrics as a build-failing gate. **The entire Aira Memory runtime (Stages
-02–10) is complete and evaluated** — and the benchmark reports all four zero-tolerance
+02–10) is complete and evaluated** — the benchmark reports all four zero-tolerance
 metrics at **0**, retrieval recall **1.0** at precision **0.81** (versus 0 with no
-memory), correction and degraded-response success **1.0** — under passing test, lint and
-type-check gates (329 tests). **The generation backend is a deterministic mock, not a
-trained model**; the model (Aira Core) is next, in Steps 11–13. Nothing here claims to be
-trained, fast, fluent, or production-ready. Every capability still ahead is a *design
-commitment* that becomes real only when a repeatable test or benchmark proves it.
+memory), correction and degraded-response success **1.0**. And **Aira Core** has begun:
+a reversible byte tokenizer (vocab 256) and a readable GPT-style decoder-only transformer
+in PyTorch — **6,515,200 parameters** — with explicit causal masking, tied embeddings,
+causal loss, deterministic init and a `TinyTransformerBackend`. All under passing test,
+lint and type-check gates (352 tests). **The model is untrained** — outputs are
+meaningless until Step 12 (training/checkpoints) and Step 13 (memory-conditioned
+evaluation); nothing here claims to be trained, fast, fluent, or production-ready. Every
+capability still ahead is a *design commitment* that becomes real only when a repeatable
+test or benchmark proves it.
 
 Try the memory lifecycle locally (mock backend, no model):
 
@@ -173,7 +177,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 09 Aira Fade & Governance (decay + user controls) | Complete |
 | Stage 10 Aira Bench (zero-tolerance metrics all 0) | Complete |
 | **Aira Memory runtime (Stages 02–10)** | **Complete + evaluated** |
-| Aira Core model (Stages 11–13) | Not started |
+| Stage 11 Aira Core (tokenizer + transformer, 6.5M params) | Complete (untrained) |
+| Aira Core training + memory-conditioned eval (Stages 12–13) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

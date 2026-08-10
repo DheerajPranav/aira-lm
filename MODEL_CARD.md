@@ -3,18 +3,20 @@
 > This card describes the *intended* model and its current state honestly. It will be
 > updated with measured numbers as the model is actually built and trained.
 
-## Current status (Step 01)
+## Current status (Step 11)
 
-**No model exists yet.** There is no tokenizer, no transformer, no checkpoint and no
-training run. This card is a commitment to what will be built and how it will be
-reported, not a description of a working system. PyTorch is not even installed by
-default at this stage (it is deferred to Step 11).
+**The model architecture exists; it is untrained.** Implemented in PyTorch: a reversible
+byte tokenizer (vocabulary 256) and a decoder-only causal transformer with the default
+configuration measuring **6,515,200 parameters** (within the 5–10M target). There is
+**no training run and no checkpoint** — forward pass, causal loss, greedy decoding and an
+exact parameter count are implemented and tested, but outputs are meaningless until
+trained. Training and checkpoints are Step 12; memory-conditioned evaluation is Step 13.
 
 ## Intended model
 
 - **Type:** decoder-only causal transformer, implemented directly in PyTorch.
 - **Tokenizer:** reversible byte-level, vocabulary 256 (Step 11).
-- **Default size target:** ~5–10 million parameters (exact count reported at Step 11).
+- **Default size:** **6,515,200 parameters** (default `configs/aira_tiny.toml`).
 - **Context length (default config):** 512 tokens.
 - **Primary hardware target:** Apple M2, 8 GB unified memory; CPU-only supported.
 - **Device selection:** MPS → CUDA → CPU.

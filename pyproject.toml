@@ -39,8 +39,10 @@ Homepage = "https://dheerajpranav.github.io/aira-lm/"
 Repository = "https://github.com/DheerajPranav/aira-lm"
 
 # uv dev dependency group (PEP 735); installed by `uv sync` by default.
+# torch is also the `core` runtime extra; it is in the dev group so the full test suite
+# (which exercises Aira Core from Step 11) runs with it installed.
 [dependency-groups]
-dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11", "torch>=2.2"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aira"]
@@ -51,6 +53,8 @@ addopts = "-q"
 markers = [
   "network: test is explicitly allowed to use the network (blocked by default)",
 ]
+# torch works without NumPy but warns once on import; keep test output clean.
+filterwarnings = ["ignore:Failed to initialize NumPy:UserWarning"]
 
 [tool.ruff]
 line-length = 100
