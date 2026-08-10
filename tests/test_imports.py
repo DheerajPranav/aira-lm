@@ -64,6 +64,10 @@ MODULES = [
     "aira.chat.engine",
     "aira.chat.session",
     "aira.evaluation",
+    "aira.evaluation.metrics",
+    "aira.evaluation.scenarios",
+    "aira.evaluation.runner",
+    "aira.evaluation.report",
 ]
 
 

@@ -1,7 +1,39 @@
-"""Aira Bench — golden and adversarial evaluation.
+"""Aira Bench — versioned golden and adversarial evaluation.
 
-Empty namespace at Step 01. The benchmark schema, metrics and zero-tolerance gates
-are implemented in Step 10; memory-conditioned model evaluation follows in Step 13.
+Runs deterministic scenarios against the memory runtime, comparing no-memory, Aira Memory
+and full-history baselines, and enforces the four zero-tolerance metrics (cross-owner
+leakage, forgotten leakage, secret persistence, context-budget violation). No LLM judge is
+used; relevance comes from known facts. Retrieval evaluation is reported separately from
+generation evaluation (the latter arrives with Aira Core, Step 13).
 """
 
-__all__: list[str] = []
+from __future__ import annotations
+
+from aira.evaluation.report import BenchReport
+from aira.evaluation.runner import BenchRunner, ScenarioOutcome
+from aira.evaluation.scenarios import (
+    SCHEMA_VERSION,
+    Category,
+    Kind,
+    Scenario,
+    default_scenarios,
+    dump_jsonl,
+    load_jsonl,
+    scenario_from_dict,
+    validate_scenario_dict,
+)
+
+__all__ = [
+    "SCHEMA_VERSION",
+    "BenchReport",
+    "BenchRunner",
+    "Category",
+    "Kind",
+    "Scenario",
+    "ScenarioOutcome",
+    "default_scenarios",
+    "dump_jsonl",
+    "load_jsonl",
+    "scenario_from_dict",
+    "validate_scenario_dict",
+]

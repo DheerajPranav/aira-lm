@@ -17,3 +17,8 @@ data/raw/
 *.log
 coverage.xml
 htmlcov/
+
+# Aira Bench generated reports (regenerate with `aira bench`)
+benchmarks/*_report.json
+benchmarks/*_report.md
+benchmarks/latest_report.*

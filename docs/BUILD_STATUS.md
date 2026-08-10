@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 09 — Aira Fade and Governance
-- Status: Complete (decay/expiry/archival + user controls; no scheduler; no model)
-- Last verified commit: Step 09 commit of `aira-lm` (2026-08-09)
-- Last updated: 2026-08-09 by Claude Code
+- Stage: 10 — Aira Bench
+- Status: Complete (memory runtime evaluated; zero-tolerance gate green; no model)
+- Last verified commit: Step 10 commit of `aira-lm` (2026-08-11)
+- Last updated: 2026-08-11 by Claude Code
 
 ## Stage checklist
 
@@ -21,15 +21,35 @@
 | 07 | Ranking and context | Complete | `src/aira/memory/ranking/*`; 267 tests; pytest/ruff/mypy green; ADR-015 |
 | 08 | Chat integration | Complete | `src/aira/chat/*` + `aira chat`; 287 tests; pytest/ruff/mypy green; ADR-016 |
 | 09 | Aira Fade and governance | Complete | `src/aira/memory/{fade,governance}/*` + `aira fade`; 306 tests; pytest/ruff/mypy green; ADR-017 |
-| 10 | Aira Bench | Pending | |
+| 10 | Aira Bench | Complete | `src/aira/evaluation/*` + `benchmarks/scenarios.v1.jsonl` + `aira bench`; 329 tests; ADR-018 |
 | 11 | Aira Core | Pending | |
 | 12 | Training and generation | Pending | |
 | 13 | Memory-conditioned evaluation | Pending | |
 | 14 | Release hardening | Pending | |
 
-## Measured metrics
+## Measured metrics (Aira Bench, Step 10)
 
-Stage 00 produces no runtime metrics (no code). Environment probes recorded:
+Deterministic run over 20 golden + adversarial scenarios (`aira bench`):
+
+| Metric | Value |
+|---|---|
+| Scenarios / all passed | 20 / true |
+| Cross-owner leakage rate | **0.0** (zero-tolerance) |
+| Forgotten-memory leakage rate | **0.0** (zero-tolerance) |
+| Secret-persistence rate | **0.0** (zero-tolerance) |
+| Context-budget violation rate | **0.0** (zero-tolerance) |
+| Retrieval recall — no-memory / Aira / full-history | 0.000 / 1.000 / 1.000 |
+| Retrieval precision — no-memory / Aira / full-history | 0.000 / 0.812 / 0.792 |
+| Retrieval MRR (Aira) | 0.938 |
+| Correction success rate | 1.0 |
+| Degraded-response success rate | 1.0 |
+
+Aira Memory matches full-history recall at higher precision (retrieves the right
+memories, not all of them), versus zero for no-memory.
+
+## Environment probes
+
+Recorded at Step 00:
 
 | Probe | Result |
 |---|---|
@@ -318,11 +338,41 @@ Stage 00 produces no runtime metrics (no code). Environment probes recorded:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 10 — `./scripts/start_step.sh 10`.
 
+## Step 10 record — 2026-08-11
+
+- **Files created:** `src/aira/evaluation/{__init__,metrics,scenarios,runner,report}.py`,
+  `benchmarks/scenarios.v1.jsonl`, `tests/test_evaluation.py`,
+  `adr/018-aira-bench-zero-tolerance-gate.md`.
+- **Files modified:** `src/aira/chat/engine.py` (public `retrieve`), `src/aira/cli/main.py`
+  (`aira bench`), `.gitignore` (per-run reports), `tests/test_imports.py`,
+  `docs/BUILD_STATUS.md`, `README.md`.
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`, `uv run aira bench` (exit 0).
+- **Test/verification results:**
+  - `pytest` → **329 passed** (23 new evaluation tests + 306 existing).
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **135 files formatted**.
+  - `mypy src` (strict) → **no issues in 62 source files**.
+  - `aira bench` → 20 scenarios, all passed, four zero-tolerance metrics **0.0**, exit 0.
+- **What was built:** deterministic metrics (precision/recall/recall@k/MRR); a versioned
+  scenario schema with 10 golden + 10 adversarial cases (committed as JSONL); a runner
+  executing them on fresh fixed-clock engines across no-memory/Aira/full-history
+  baselines; a report with the four zero-tolerance metrics, a regression gate and JSON +
+  Markdown output; and the `aira bench` CLI.
+- **Measured metrics:** see the table above.
+- **Invariant coverage (tested):** the four zero-tolerance metrics = 0 (inv. 1, 2, 7, 10);
+  degraded success = 1 (inv. 3); injection stays quoted (inv. 8); correction success = 1;
+  report reproducibility and schema validation (inv. 12).
+- **ADR changes:** ADR-018 added (deterministic benchmark + zero-tolerance gate).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 11 — `./scripts/start_step.sh 11`.
+
 ## Known limitations
 
-- Fade is manual (no scheduler); stale memories persist until a run is invoked.
-- The backend is a deterministic mock (no language-quality claim); Aira Core is Steps 11–13.
-- No versioned golden/adversarial benchmark yet (Step 10); no model, training or checkpoint.
+- The **memory runtime (Stages 02–10) is complete and evaluated**; Aira Core (the model)
+  does not exist yet — Steps 11–13.
+- Bench relevance is substring-based (suits known-fact scenarios; not a general relevance
+  model); no LLM judge by design.
+- Fade is manual (no scheduler); the generation backend is a deterministic mock.
 - Retrieval degrades by catching exceptions; a hard preemptive timeout is deferred (ADR-016).
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).

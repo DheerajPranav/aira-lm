@@ -55,6 +55,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     fade.add_argument("--owner", default=None, help="Restrict to one owner (default: all).")
     fade.set_defaults(func=_cmd_fade)
+
+    bench = subparsers.add_parser(
+        "bench",
+        help="Run Aira Bench (golden + adversarial); exits non-zero on any regression.",
+    )
+    bench.add_argument("--json", default=None, help="Write the machine-readable report here.")
+    bench.add_argument("--markdown", default=None, help="Write the Markdown report here.")
+    bench.set_defaults(func=_cmd_bench)
     return parser
 
 
@@ -89,6 +97,30 @@ def _cmd_fade(args: argparse.Namespace) -> int:
         f"expired={report.expired_count}\n"
     )
     return 0
+
+
+def _cmd_bench(args: argparse.Namespace) -> int:
+    """Run the benchmark and report; return 1 if any regression is detected."""
+    from pathlib import Path
+
+    from aira.evaluation import BenchReport, BenchRunner
+
+    cfg = load_config(DEFAULT_CONFIG_PATH)
+    report = BenchReport.from_outcomes(BenchRunner(cfg).run(), cfg)
+    if args.json:
+        Path(args.json).write_text(report.to_json(), encoding="utf-8")
+    if args.markdown:
+        Path(args.markdown).write_text(report.to_markdown(), encoding="utf-8")
+
+    sys.stdout.write(
+        f"Aira Bench: {report.scenario_count} scenarios, all_passed={report.all_passed}\n"
+    )
+    for name, value in report.zero_tolerance.items():
+        sys.stdout.write(f"  {name} = {value}\n")
+    regressions = report.regressions()
+    for problem in regressions:
+        sys.stderr.write(f"REGRESSION: {problem}\n")
+    return 1 if regressions else 0
 
 
 def _cmd_doctor(_args: argparse.Namespace, out: StringIO | None = None) -> int:

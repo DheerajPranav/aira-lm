@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-09_fade_and_governance-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-10_aira_bench-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -52,11 +52,15 @@ metadata, and isolated failures that degrade to a no-memory response, plus an `a
 CLI; and **Aira Fade & Governance** — a manually-invokable decay/expiry/archival job
 (type-specific, deterministic, and it *never* hard-deletes) plus explicit owner controls
 (inspect, explain with audit trail, guard-screened correction, reinforcement only on
-usefulness, forget, export, atomic guard-screened import, owner-scoped delete-all).
-**The complete Aira Memory lifecycle now works end to end** — remember, recall, correct,
-forget, decay/expire, block-unsafe, owner isolation — under passing test, lint and
-type-check gates (306 tests). **The generation backend is a deterministic mock, not a
-trained model**; there is no model, tokenizer or checkpoint yet. Nothing here claims to be
+usefulness, forget, export, atomic guard-screened import, owner-scoped delete-all); and
+**Aira Bench** — a versioned golden + adversarial benchmark (20 scenarios) that measures
+retrieval quality against no-memory/Aira/full-history baselines and enforces the four
+zero-tolerance metrics as a build-failing gate. **The entire Aira Memory runtime (Stages
+02–10) is complete and evaluated** — and the benchmark reports all four zero-tolerance
+metrics at **0**, retrieval recall **1.0** at precision **0.81** (versus 0 with no
+memory), correction and degraded-response success **1.0** — under passing test, lint and
+type-check gates (329 tests). **The generation backend is a deterministic mock, not a
+trained model**; the model (Aira Core) is next, in Steps 11–13. Nothing here claims to be
 trained, fast, fluent, or production-ready. Every capability still ahead is a *design
 commitment* that becomes real only when a repeatable test or benchmark proves it.
 
@@ -65,6 +69,7 @@ Try the memory lifecycle locally (mock backend, no model):
 ```bash
 uv sync
 printf 'my editor is vim\n/memories\nwhat is my editor?\n/exit\n' | uv run aira chat
+uv run aira bench   # 20 golden + adversarial scenarios; exits non-zero on any regression
 ```
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
@@ -166,7 +171,9 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 07 Ranking & Context (fusion, dedup, budget) | Complete |
 | Stage 08 Chat Integration (mock backend, degradation) | Complete |
 | Stage 09 Aira Fade & Governance (decay + user controls) | Complete |
-| Aira Bench — golden + adversarial evaluation (Stage 10) | Not started |
+| Stage 10 Aira Bench (zero-tolerance metrics all 0) | Complete |
+| **Aira Memory runtime (Stages 02–10)** | **Complete + evaluated** |
+| Aira Core model (Stages 11–13) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

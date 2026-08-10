@@ -27,6 +27,7 @@ from aira.memory.governance import Explanation, GovernanceService
 from aira.memory.guard import default_guard
 from aira.memory.ranking import (
     ByteTokenizer,
+    ContextBlock,
     DecayParams,
     Ranker,
     RankingWeights,
@@ -143,6 +144,20 @@ class ChatEngine:
             raise RuntimeError("this engine has no fade job")
         return self._fade.run(now=now or utc_now(), owner_id=owner_id)
 
+    def retrieve(
+        self, owner_id: str, query: str, *, now: datetime | None = None, debug: bool = False
+    ) -> tuple[list[MemoryRecord], ContextBlock, int]:
+        """Run the read path for evaluation: returns (included records, block, candidate count)."""
+        stamp = now if now is not None else utc_now()
+        results = self._retriever.search(owner_id, query, limit=self._retrieve_limit)
+        ranked = self._ranker.rank(results, now=stamp)
+        block = compose_memory_context(
+            ranked, budget=self._budget, top_k=self._top_k, tokenizer=self._tok, debug=debug
+        )
+        by_id = {rm.memory.id: rm.memory for rm in ranked}
+        included = [by_id[item.memory_id] for item in block.items]
+        return included, block, len(results)
+
     # --- pipeline stages -----------------------------------------------------------
 
     def _write_path(
@@ -159,15 +174,10 @@ class ChatEngine:
         self, owner_id: str, message: str, stamp: datetime, debug: bool
     ) -> tuple[tuple[str, ...], str, tuple[str, ...], int, bool]:
         try:
-            results = self._retriever.search(owner_id, message, limit=self._retrieve_limit)
-            ranked = self._ranker.rank(results, now=stamp)
-            block = compose_memory_context(
-                ranked, budget=self._budget, top_k=self._top_k, tokenizer=self._tok, debug=debug
-            )
-            id_to_content = {rm.memory.id: rm.memory.content for rm in ranked}
-            facts = tuple(id_to_content[item.memory_id] for item in block.items)
-            included_ids = tuple(item.memory_id for item in block.items)
-            return facts, block.text, included_ids, len(results), False
+            included, block, count = self.retrieve(owner_id, message, now=stamp, debug=debug)
+            facts = tuple(record.content for record in included)
+            included_ids = tuple(record.id for record in included)
+            return facts, block.text, included_ids, count, False
         except Exception:  # noqa: BLE001 - degrade to no-memory generation
             _LOGGER.warning("retrieval failed; degrading to no-memory response", exc_info=False)
             return (), "", (), 0, True
