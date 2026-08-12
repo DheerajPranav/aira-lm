@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-11_aira_core-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-12_training_and_generation-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -61,19 +61,23 @@ metrics at **0**, retrieval recall **1.0** at precision **0.81** (versus 0 with 
 memory), correction and degraded-response success **1.0**. And **Aira Core** has begun:
 a reversible byte tokenizer (vocab 256) and a readable GPT-style decoder-only transformer
 in PyTorch — **6,515,200 parameters** — with explicit causal masking, tied embeddings,
-causal loss, deterministic init and a `TinyTransformerBackend`. All under passing test,
-lint and type-check gates (352 tests). **The model is untrained** — outputs are
-meaningless until Step 12 (training/checkpoints) and Step 13 (memory-conditioned
-evaluation); nothing here claims to be trained, fast, fluent, or production-ready. Every
-capability still ahead is a *design commitment* that becomes real only when a repeatable
-test or benchmark proves it.
+causal loss, deterministic init and a `TinyTransformerBackend` — and it can now be
+**trained locally** (`ByteDataset` + an AdamW loop with warmup/cosine, clipping,
+validation and deterministic seeds; versioned checkpoints; greedy/temperature/top-k
+generation via `aira train`). All under passing test, lint and type-check gates (367
+tests). **Training is smoke-scale on a tiny built-in corpus** — there is no meaningfully
+trained checkpoint and the output is not language; nothing here claims to be trained,
+fast, fluent, or production-ready. Whether retrieved memory *helps* the model is measured
+next, in Step 13. Every capability still ahead is a *design commitment* that becomes real
+only when a repeatable test or benchmark proves it.
 
 Try the memory lifecycle locally (mock backend, no model):
 
 ```bash
 uv sync
 printf 'my editor is vim\n/memories\nwhat is my editor?\n/exit\n' | uv run aira chat
-uv run aira bench   # 20 golden + adversarial scenarios; exits non-zero on any regression
+uv run aira bench            # 20 golden + adversarial scenarios; fails on any regression
+uv run aira train --steps 20 # smoke-train Aira Core on the tiny local corpus (no download)
 ```
 
 That honesty is a rule of the project, not a disclaimer: *no security, quality, or
@@ -177,8 +181,9 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | Stage 09 Aira Fade & Governance (decay + user controls) | Complete |
 | Stage 10 Aira Bench (zero-tolerance metrics all 0) | Complete |
 | **Aira Memory runtime (Stages 02–10)** | **Complete + evaluated** |
-| Stage 11 Aira Core (tokenizer + transformer, 6.5M params) | Complete (untrained) |
-| Aira Core training + memory-conditioned eval (Stages 12–13) | Not started |
+| Stage 11 Aira Core (tokenizer + transformer, 6.5M params) | Complete |
+| Stage 12 Training & Generation (loop, checkpoints, sampling) | Complete (smoke-scale) |
+| Memory-conditioned evaluation + release (Stages 13–14) | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

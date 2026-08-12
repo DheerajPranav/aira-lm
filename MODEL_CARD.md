@@ -3,14 +3,16 @@
 > This card describes the *intended* model and its current state honestly. It will be
 > updated with measured numbers as the model is actually built and trained.
 
-## Current status (Step 11)
+## Current status (Step 12)
 
-**The model architecture exists; it is untrained.** Implemented in PyTorch: a reversible
-byte tokenizer (vocabulary 256) and a decoder-only causal transformer with the default
-configuration measuring **6,515,200 parameters** (within the 5–10M target). There is
-**no training run and no checkpoint** — forward pass, causal loss, greedy decoding and an
-exact parameter count are implemented and tested, but outputs are meaningless until
-trained. Training and checkpoints are Step 12; memory-conditioned evaluation is Step 13.
+**The model can be trained locally, but only at smoke scale.** Implemented in PyTorch: a
+reversible byte tokenizer (vocabulary 256), a decoder-only causal transformer
+(**6,515,200 parameters** in the default config), a local training loop (AdamW, warmup +
+cosine, clipping, validation, deterministic seeds, graceful interruption), versioned
+checkpoints, and greedy/temperature/top-k generation. There is **no meaningfully trained
+checkpoint**: `aira train` runs a few steps on a tiny built-in corpus purely to prove the
+pipeline, and its output is not language. No dataset is downloaded. Whether retrieved
+memory *helps* the model is measured in Step 13.
 
 ## Intended model
 

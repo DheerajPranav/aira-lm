@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 11 — Aira Core
-- Status: Complete (tokenizer + transformer implemented; untrained; no checkpoint)
-- Last verified commit: Step 11 commit of `aira-lm` (2026-08-11)
-- Last updated: 2026-08-11 by Claude Code
+- Stage: 12 — Training and Generation
+- Status: Complete (local training + checkpoints + sampling; smoke-scale only)
+- Last verified commit: Step 12 commit of `aira-lm` (2026-08-12)
+- Last updated: 2026-08-12 by Claude Code
 
 ## Stage checklist
 
@@ -23,7 +23,7 @@
 | 09 | Aira Fade and governance | Complete | `src/aira/memory/{fade,governance}/*` + `aira fade`; 306 tests; pytest/ruff/mypy green; ADR-017 |
 | 10 | Aira Bench | Complete | `src/aira/evaluation/*` + `benchmarks/scenarios.v1.jsonl` + `aira bench`; 329 tests; ADR-018 |
 | 11 | Aira Core | Complete | `src/aira/core/*` (tokenizer, model, backend); 6.52M params; 352 tests; ADR-019 |
-| 12 | Training and generation | Pending | |
+| 12 | Training and generation | Complete | `src/aira/core/{data,train,checkpoint,generate}.py` + `aira train`; 367 tests; ADR-020 |
 | 13 | Memory-conditioned evaluation | Pending | |
 | 14 | Release hardening | Pending | |
 
@@ -393,15 +393,42 @@ Recorded at Step 00:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 12 — `./scripts/start_step.sh 12`.
 
+## Step 12 record — 2026-08-12
+
+- **Files created:** `src/aira/core/{data,generate,checkpoint,train}.py`,
+  `tests/test_train.py`, `adr/020-training-generation-checkpoints.md`.
+- **Files modified:** `src/aira/core/__init__.py`, `src/aira/cli/main.py` (`aira train`),
+  `tests/test_imports.py`, `MODEL_CARD.md`, `docs/BUILD_STATUS.md`, `README.md`.
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`, `uv run aira train --steps 20`.
+- **Test/verification results:**
+  - `pytest` → **367 passed** (15 new train tests + 352 existing) in ~3.5s.
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **146 files formatted**.
+  - `mypy src` (strict) → **no issues in 69 source files**.
+  - `aira train --steps 20` → real 6.5M model on **MPS**, loss 5.67 → 2.91 (ppl 18.41), ~4.2s.
+- **What was built:** `ByteDataset` (train/val split, deterministic next-byte batches,
+  tiny local corpus); a `Trainer` (AdamW + linear-warmup/cosine schedule, grad clip,
+  periodic validation, seed control, graceful interruption, loss/perplexity/time/peak-RSS
+  metrics); versioned checkpoint save/load/resume; greedy/temperature/top-k generation;
+  and the `aira train` smoke CLI.
+- **Measured metrics:** overfit fixture loss decreases (5.54 → ~2.40 on a 118k-param test
+  model); checkpoint round-trip + optimizer resume; greedy + seeded sampling reproducible.
+- **Invariant coverage (tested):** deterministic batches/training/generation (inv. 12);
+  offline (no downloads); checkpoint schema versioning.
+- **ADR changes:** ADR-020 added (local training, versioned checkpoints, seeded generation).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 13 — `./scripts/start_step.sh 13`.
+
 ## Known limitations
 
-- **Aira Core is untrained** — outputs are meaningless; no checkpoint exists. Training,
-  checkpointing and temperature/top-k generation are Step 12; memory-conditioned
-  evaluation is Step 13.
-- PyTorch is now installed (dev group + `core` extra); the memory runtime still imports no
-  torch, preserving the two-system boundary in code.
-- Bench relevance is substring-based; no LLM judge. Fade is manual; retrieval degrades by
-  catching exceptions (hard timeout deferred, ADR-016).
+- Training is **smoke-scale on a tiny local corpus**; the model is not meaningfully
+  trained and output is not language. Whether memory *helps* the checkpoint is measured in
+  Step 13.
+- No real corpus is downloaded (by design); a longer/real run needs a user-supplied local
+  corpus (see `docs/DATA_STRATEGY.md`).
+- PyTorch is installed (dev + `core` extra); the memory runtime still imports no torch.
+- Bench relevance is substring-based; fade is manual; retrieval degrades by catching
+  exceptions (hard timeout deferred, ADR-016).
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level

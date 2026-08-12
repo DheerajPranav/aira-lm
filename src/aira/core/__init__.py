@@ -12,6 +12,14 @@ PyTorch is an optional dependency (the ``core`` extra); importing this package r
 from __future__ import annotations
 
 from aira.core.backend import TinyTransformerBackend
+from aira.core.checkpoint import (
+    CHECKPOINT_SCHEMA_VERSION,
+    load_checkpoint,
+    resume,
+    save_checkpoint,
+)
+from aira.core.data import TINY_CORPUS, ByteDataset
+from aira.core.generate import generate
 from aira.core.model import (
     AiraCore,
     Block,
@@ -21,15 +29,34 @@ from aira.core.model import (
     from_config,
 )
 from aira.core.tokenizer import VOCAB_SIZE, ByteTokenizer
+from aira.core.train import (
+    SMOKE_TRAIN_CONFIG,
+    StepRecord,
+    TrainConfig,
+    Trainer,
+    TrainResult,
+)
 
 __all__ = [
+    "CHECKPOINT_SCHEMA_VERSION",
+    "SMOKE_TRAIN_CONFIG",
+    "TINY_CORPUS",
     "VOCAB_SIZE",
     "AiraCore",
     "Block",
+    "ByteDataset",
     "ByteTokenizer",
     "CausalSelfAttention",
     "FeedForward",
+    "StepRecord",
     "TinyTransformerBackend",
+    "TrainConfig",
+    "TrainResult",
+    "Trainer",
     "build_model",
     "from_config",
+    "generate",
+    "load_checkpoint",
+    "resume",
+    "save_checkpoint",
 ]

@@ -63,7 +63,55 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--json", default=None, help="Write the machine-readable report here.")
     bench.add_argument("--markdown", default=None, help="Write the Markdown report here.")
     bench.set_defaults(func=_cmd_bench)
+
+    train = subparsers.add_parser(
+        "train",
+        help="Smoke-train Aira Core on the tiny local corpus (no download; not a real run).",
+    )
+    train.add_argument("--steps", type=int, default=30, help="Number of training steps.")
+    train.add_argument("--out", default=None, help="Optional checkpoint output path.")
+    train.set_defaults(func=_cmd_train)
     return parser
+
+
+def _cmd_train(args: argparse.Namespace) -> int:
+    """Run a small local smoke training run and print metrics + a sample. Returns exit code."""
+    from aira.core import (
+        TINY_CORPUS,
+        ByteDataset,
+        TrainConfig,
+        Trainer,
+        build_model,
+        generate,
+    )
+
+    cfg = load_config(DEFAULT_CONFIG_PATH)
+    model = build_model(cfg.model, seed=cfg.runtime.seed)
+    dataset = ByteDataset(TINY_CORPUS)
+    train_cfg = TrainConfig(
+        steps=args.steps,
+        batch_size=8,
+        block_size=32,
+        warmup_steps=max(1, args.steps // 5),
+        eval_interval=max(1, args.steps // 2),
+        eval_steps=2,
+        seed=cfg.runtime.seed,
+    )
+    trainer = Trainer(model, train_cfg, cfg.model)
+    result = trainer.train(dataset, checkpoint_path=args.out)
+    sample = generate(
+        model, "aira ", max_new_tokens=48, temperature=0.8, top_k=40, seed=cfg.runtime.seed
+    )
+
+    sys.stdout.write(
+        f"Aira Core smoke train ({model.parameter_count():,} params, device={trainer.device}):\n"
+        f"  steps={result.steps} loss {result.history[0].train_loss:.3f} -> "
+        f"{result.final_train_loss:.3f} (ppl {result.train_perplexity:.2f})\n"
+        f"  val_loss={result.final_val_loss} elapsed={result.elapsed_seconds}s\n"
+        f"  sample: {sample!r}\n"
+        "  (untrained-scale run; output is not meaningful language)\n"
+    )
+    return 0
 
 
 def _cmd_chat(args: argparse.Namespace) -> int:
