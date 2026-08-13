@@ -75,6 +75,7 @@ MODULES = [
     "aira.evaluation.scenarios",
     "aira.evaluation.runner",
     "aira.evaluation.report",
+    "aira.evaluation.memory_eval",
 ]
 
 

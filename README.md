@@ -5,7 +5,7 @@
 <p align="center"><em>Remember what matters. Forget responsibly.</em></p>
 
 <p align="center">
-  <img alt="stage" src="https://img.shields.io/badge/stage-12_training_and_generation-111318">
+  <img alt="stage" src="https://img.shields.io/badge/stage-13_memory_conditioned_eval-111318">
   <img alt="status" src="https://img.shields.io/badge/status-in_active_development-75A478">
   <img alt="runtime" src="https://img.shields.io/badge/local--first-offline-C8C5BC">
   <img alt="python" src="https://img.shields.io/badge/python-3.12-111318">
@@ -64,12 +64,17 @@ in PyTorch — **6,515,200 parameters** — with explicit causal masking, tied e
 causal loss, deterministic init and a `TinyTransformerBackend` — and it can now be
 **trained locally** (`ByteDataset` + an AdamW loop with warmup/cosine, clipping,
 validation and deterministic seeds; versioned checkpoints; greedy/temperature/top-k
-generation via `aira train`). All under passing test, lint and type-check gates (367
-tests). **Training is smoke-scale on a tiny built-in corpus** — there is no meaningfully
-trained checkpoint and the output is not language; nothing here claims to be trained,
-fast, fluent, or production-ready. Whether retrieved memory *helps* the model is measured
-next, in Step 13. Every capability still ahead is a *design commitment* that becomes real
-only when a repeatable test or benchmark proves it.
+generation via `aira train`); and a **memory-conditioned evaluation** (`aira memeval`)
+that runs controlled tasks with Aira Core as the backend, comparing no-memory / Aira /
+full-history and **separating retrieval from generation**. The honest result on the
+built-in tasks: retrieval lifts *context availability* from **0.0** (no memory) to **1.0**
+(Aira), while *generation adherence* stays **0.0** for the untrained checkpoint and
+forgotten facts are never disclosed — i.e. **memory works at the retrieval boundary; the
+tiny untrained model just can't reproduce the facts yet.** All under passing test, lint
+and type-check gates (378 tests). **Training is smoke-scale on a tiny built-in corpus** —
+no meaningfully trained checkpoint, output is not language; nothing here claims to be
+trained, fast, fluent, or production-ready. Every capability still ahead is a *design
+commitment* that becomes real only when a repeatable test or benchmark proves it.
 
 Try the memory lifecycle locally (mock backend, no model):
 
@@ -183,7 +188,8 @@ assumptions: **[`ASSUMPTIONS.md`](ASSUMPTIONS.md)** · risks:
 | **Aira Memory runtime (Stages 02–10)** | **Complete + evaluated** |
 | Stage 11 Aira Core (tokenizer + transformer, 6.5M params) | Complete |
 | Stage 12 Training & Generation (loop, checkpoints, sampling) | Complete (smoke-scale) |
-| Memory-conditioned evaluation + release (Stages 13–14) | Not started |
+| Stage 13 Memory-conditioned evaluation (retrieval vs generation) | Complete |
+| Stage 14 Release hardening | Not started |
 | Aira Core model (Stages 11–13) | Not started |
 | Trained checkpoint / language quality | None claimed |
 | License | **Not chosen** — all rights reserved until one is selected |

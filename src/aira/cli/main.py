@@ -71,7 +71,42 @@ def build_parser() -> argparse.ArgumentParser:
     train.add_argument("--steps", type=int, default=30, help="Number of training steps.")
     train.add_argument("--out", default=None, help="Optional checkpoint output path.")
     train.set_defaults(func=_cmd_train)
+
+    memeval = subparsers.add_parser(
+        "memeval",
+        help="Memory-conditioned evaluation: does retrieved memory help this checkpoint?",
+    )
+    memeval.add_argument("--checkpoint", default=None, help="Optional checkpoint to evaluate.")
+    memeval.add_argument("--json", default=None, help="Write the machine-readable report here.")
+    memeval.add_argument("--markdown", default=None, help="Write the Markdown report here.")
+    memeval.set_defaults(func=_cmd_memeval)
     return parser
+
+
+def _cmd_memeval(args: argparse.Namespace) -> int:
+    """Run the memory-conditioned evaluation and print an honest report. Returns exit code."""
+    import json
+    from pathlib import Path
+
+    from aira.core import build_model, resume
+    from aira.evaluation import MemoryConditionedEvaluator
+
+    cfg = load_config(DEFAULT_CONFIG_PATH)
+    model = build_model(cfg.model, seed=cfg.runtime.seed)
+    checkpoint = None
+    if args.checkpoint:
+        resume(args.checkpoint, model=model)
+        checkpoint = args.checkpoint
+
+    report = MemoryConditionedEvaluator(
+        cfg, model, seed=cfg.runtime.seed, checkpoint=checkpoint
+    ).run()
+    if args.json:
+        Path(args.json).write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+    if args.markdown:
+        Path(args.markdown).write_text(report.to_markdown(), encoding="utf-8")
+    sys.stdout.write(report.to_markdown())
+    return 0
 
 
 def _cmd_train(args: argparse.Namespace) -> int:

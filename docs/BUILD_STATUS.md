@@ -2,10 +2,10 @@
 
 ## Current stage
 
-- Stage: 12 — Training and Generation
-- Status: Complete (local training + checkpoints + sampling; smoke-scale only)
-- Last verified commit: Step 12 commit of `aira-lm` (2026-08-12)
-- Last updated: 2026-08-12 by Claude Code
+- Stage: 13 — Memory-Conditioned Evaluation
+- Status: Complete (reproducible experiment; retrieval helps context, generation inconclusive)
+- Last verified commit: Step 13 commit of `aira-lm` (2026-08-13)
+- Last updated: 2026-08-13 by Claude Code
 
 ## Stage checklist
 
@@ -24,7 +24,7 @@
 | 10 | Aira Bench | Complete | `src/aira/evaluation/*` + `benchmarks/scenarios.v1.jsonl` + `aira bench`; 329 tests; ADR-018 |
 | 11 | Aira Core | Complete | `src/aira/core/*` (tokenizer, model, backend); 6.52M params; 352 tests; ADR-019 |
 | 12 | Training and generation | Complete | `src/aira/core/{data,train,checkpoint,generate}.py` + `aira train`; 367 tests; ADR-020 |
-| 13 | Memory-conditioned evaluation | Pending | |
+| 13 | Memory-conditioned evaluation | Complete | `src/aira/evaluation/memory_eval.py` + `aira memeval`; 378 tests; ADR-021 |
 | 14 | Release hardening | Pending | |
 
 ## Measured metrics (Aira Bench, Step 10)
@@ -419,16 +419,45 @@ Recorded at Step 00:
 - **Remaining limitations:** see below.
 - **Next permitted step:** Step 13 — `./scripts/start_step.sh 13`.
 
+## Step 13 record — 2026-08-13
+
+- **Files created:** `src/aira/evaluation/memory_eval.py`, `tests/test_memory_eval.py`,
+  `adr/021-memory-conditioned-evaluation.md`.
+- **Files modified:** `src/aira/evaluation/__init__.py`, `src/aira/cli/main.py`
+  (`aira memeval`), `tests/test_imports.py`, `docs/BUILD_STATUS.md`, `README.md`.
+- **Commands executed:** `uv run pytest`, `uv run ruff check .`,
+  `uv run ruff format --check .`, `uv run mypy src`, `uv run aira memeval --help`.
+- **Test/verification results:**
+  - `pytest` → **378 passed** (11 new memory-eval tests + 367 existing) in ~3.5s.
+  - `ruff check .` → **All checks passed**; `ruff format --check .` → **149 files formatted**.
+  - `mypy src` (strict) → **no issues in 70 source files**.
+- **What was built:** a `MemoryConditionedEvaluator` running controlled tasks (factual,
+  correction, forgetting) through the real capture pipeline with `TinyTransformerBackend`
+  as the generator; three baselines (no-memory / Aira Memory / full-history); **context
+  availability** (retrieval) vs **generation adherence** (generation) kept separate;
+  context cost, latency, model/checkpoint/seed versions, a ranking ablation, and an
+  honestly-generated conclusion; JSON + Markdown reports; and the `aira memeval` CLI.
+- **Measured metrics (built-in tasks, untrained model):** context availability —
+  no-memory **0.0**, Aira **1.0**, full-history **1.0**; generation adherence **0.0**
+  across baselines (untrained); forgotten non-disclosure **1.0**; Aira context cost
+  bounded by the token budget. **Retrieval demonstrably helps at the context boundary;
+  generation-side benefit is inconclusive at this scale — reported, not hidden.**
+- **Invariant coverage (tested):** memory improves context availability; forgotten facts
+  never disclosed (inv. 2/9); Aira context within budget (inv. 10); deterministic and
+  reproducible report (inv. 12); backend integrates with chat without memory↔torch coupling.
+- **ADR changes:** ADR-021 added (retrieval-vs-generation separation; honest reporting).
+- **Remaining limitations:** see below.
+- **Next permitted step:** Step 14 — `./scripts/start_step.sh 14`.
+
 ## Known limitations
 
-- Training is **smoke-scale on a tiny local corpus**; the model is not meaningfully
-  trained and output is not language. Whether memory *helps* the checkpoint is measured in
-  Step 13.
-- No real corpus is downloaded (by design); a longer/real run needs a user-supplied local
-  corpus (see `docs/DATA_STRATEGY.md`).
+- The memory-conditioned experiment uses an **untrained/smoke-scale** checkpoint, so
+  generation adherence is 0 by expectation; it is evidence about model scale, not about
+  the memory system. Re-run `aira memeval --checkpoint …` once a real checkpoint exists.
+- Training remains smoke-scale on a tiny local corpus (no downloads). Bench relevance is
+  substring-based; fade is manual; retrieval degrades by catching exceptions (ADR-016).
 - PyTorch is installed (dev + `core` extra); the memory runtime still imports no torch.
-- Bench relevance is substring-based; fade is manual; retrieval degrades by catching
-  exceptions (hard timeout deferred, ADR-016).
+- Release hardening (packaging, SECURITY/PRIVACY docs, production-gap) is Step 14.
 - No at-rest encryption or key management is claimed; local file-system trust only
   (documented in the threat model; a production gap for Step 14).
 - SQLite gives transactions but not hosted multi-tenant controls (e.g. row-level
